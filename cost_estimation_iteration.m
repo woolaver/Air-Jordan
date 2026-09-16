@@ -17,3 +17,4 @@ end
 % cash operating costs
 
 function [crew_cost] = crew(AF, MTOW, tb, CEF)
+%ben likes dick
