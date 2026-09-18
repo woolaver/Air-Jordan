@@ -51,12 +51,12 @@ while delta > p.tol
     w0 = W0_new;
 end
 
-out.W0_N            = w0;
-out.W0_kg           = w0 / g;
-out.WE_W0           = WE_W0;
-out.WE_kg           = WE_W0 * w0 / g;
-out.WF_W0           = WF_W0;
-out.WF_kg           = WF_W0 * w0 / g;
+out.W0_N = w0;
+out.W0_kg = w0 / g;
+out.WE_W0 = WE_W0;
+out.WE_kg = WE_W0 * w0 / g;
+out.WF_W0 = WF_W0;
+out.WF_kg = WF_W0 * w0 / g;
 out.mass_battery_kg = mass_battery;
 out.electric_prop_system_kg = mass_battery + electric_motor_weight / g;
 out.W_payload_kg    = W_payload / g;
