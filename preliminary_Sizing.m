@@ -1,5 +1,4 @@
-function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, ...
-    Wclimb_W0,Wland_W0)
+function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_W0, Wland_W0)
 
     %Preliminary Sizing function to create T/W - W/S design space
     
