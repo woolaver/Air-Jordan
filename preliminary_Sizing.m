@@ -39,7 +39,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     k_takeoff = 1/(pi*e_takeoff*AR);
     k_landing = 1/(pi*e_landing*AR);
 
-    CL = linspace(-.5, 1.5, 1000);
+    CL = linspace(-.5, 5, 1000);
 
     CD_clean = CD0_clean + k_clean.*CL.^2;
     CD_takeoff = CD0_takeoff + k_takeoff.*CL.^2;
@@ -64,7 +64,8 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     W_S_sweep = linspace(0, 100, 200); %create a wing loading var to sweep over
     rho  = 0.001640; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
     rho_sl = 0.002377; %slug/ft^3
-    rho_cr = .001581; %12000 ft, 20degF
+    [~, ~, ~, rho_cr] = atmoscoesa((alt_cr/3.281)); %kg/m^3
+    rho_cr = rho_cr/515.4; %slug/ft^3
     rho_ce = .001267; %20,000 ft
     rho_400 = 0.0016196; %7200ft, 90degF (400 ft above colorado) 
 
@@ -112,7 +113,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     G = 0.001;
     V_ce = 350;
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
-    Pce_P0 = (rho_ce/rho_sl)^0.6;
+    Pce_P0 = (rho_ce/rho_sl)^0.8;
     P_W_ce_cor = ones([1, 200]).*(P_W_ce)*(Wce_W0/Pce_P0);
 
     function P_W_climb_cor = climb(G,CLmax,ks,prop_efficiency,Wclimb_W0, rho_clm,rho_sl, L_D_clm)

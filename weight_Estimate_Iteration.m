@@ -1,6 +1,6 @@
 %Complete iteration loop for initial aircraft weight estimation
 
-function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star)
+function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation)
 
 g = 9.8; %m/s^2
 num_passengers = 8; %7 + 1 pilot
@@ -76,7 +76,7 @@ while delta > tol
     WF_W0 = 1 - (W9_W8*W8_W7*W7_W6*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0);
     m_cruise = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0*W0/g; %kg
 
-    mass_battery = (R_electric*g*m_cruise)/(batt_efficiency*eb_star*L_D); %kg
+    mass_battery = (R_electric*g*m_cruise)/(batt_efficiency*eb_star*L_D*battery_degradation); %kg
 
     W0_new = (W_payload + mass_battery*g)/(1 - WF_W0 - WE_W0); %kg
     delta = abs(W0_new - W0)/W0_new;

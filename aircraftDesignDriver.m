@@ -31,11 +31,13 @@ batt_efficiency = .96; %conservative estimate from slides
 % and possibly achieving the 750 Wh/kg mark by 2035 (Kühnelt et al. 2023).
 eb_star = 420*3600; %500 Wh/kg from estimate converted to SI units J/kg
 
+battery_degradation = .9;
+
 disp('WEIGHT ESTIMATION:')
 
 %returns W0 in kg, Wcr_W0 is cruise weight fraction assuming fuel cruise is
 %before electric cruise, Wl_W0 is landing weight fraciton
-[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star);
+[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation);
 
 disp('--------------------------------------')
 %% Preliminary Sizing
@@ -66,7 +68,7 @@ Pcr_P0 = .9;
 %assuming unpressurized for now, may want to pressurize later but for how
 %short our flight time is climbing to high altitudes will probably not be
 %worth it
-alt_cr = 10000; %feet
+alt_cr = 12500; %feet
 
 preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr)
 
