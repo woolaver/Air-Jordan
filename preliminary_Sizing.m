@@ -156,7 +156,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     ylabel('P/W');
     title('P/W vs W/S');
     grid on;
-    
+
     % Explicitly generate the legend using the handles
     legend(h, 'Location', 'Northeast');
     
