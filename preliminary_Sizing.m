@@ -1,4 +1,4 @@
-function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_W0, Wland_W0)
+function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr)
 
     %Preliminary Sizing function to create T/W - W/S design space
     
@@ -13,9 +13,6 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_
     W0_lbs = 2.2*W0; %lbs
     
     S_wet = 10^(c + d*log10(W0_lbs)); %ft^2
-
-    %Raymer's estimations for Cf, using twin engine small aircraft
-    Cf_clean = .0045;
 
     f_clean = S_wet*Cf_clean;
 
@@ -64,17 +61,13 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_
     hold off
 
     %variables
-    W_S_sweep = linspace(0,200, 200); %create a wing loading var to sweep over
+    W_S_sweep = linspace(0, 100, 200); %create a wing loading var to sweep over
     rho  = 0.001640; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
     rho_sl = 0.002377; %slug/ft^3
     rho_cr = .001581; %12000 ft, 20degF
     rho_ce = .001267; %20,000 ft
     rho_400 = 0.0016196; %7200ft, 90degF (400 ft above colorado) 
 
-    eta_p = .8; %propeller efficiency
-    %estimate CLmax for different configurations
-    CLmax_clean = 1.5;
-    CLmax_to = 5;
     %CD values for different configurations
     CD_clean_val = CD0_clean + k_clean*CLmax_clean^2;
     CD_to_val = CD0_takeoff + k_takeoff*CLmax_to^2;
@@ -112,32 +105,30 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_
     V_cr = 379.76; %ft/s
     q = (rho_cr*V_cr^2)/2;
     W_S_cr = W_S_sweep.*Wcr_W0;
-    P_W_cr = (V_cr/(550*eta_p)).*((q./W_S_cr).*CD0_clean + (W_S_cr./q).*k_clean); 
+    P_W_cr = (V_cr/(550*prop_efficiency)).*((q./W_S_cr).*CD0_clean + (W_S_cr./q).*k_clean); 
     P_W_cr_cor = (P_W_cr).*(Wcr_W0/Pcr_P0); %hp/lb
 
     %ceiling
     G = 0.001;
     V_ce = 350;
-    P_W_ce = (V_ce/(550*eta_p))*(G + 2*sqrt(CD0_clean*k_clean));
+    P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
     Pce_P0 = (rho_ce/rho_sl)^0.6;
     P_W_ce_cor = (P_W_ce)*(Wce_W0/Pce_P0);
 
-    function P_W_climb_cor = climb(G,CLmax,ks,eta_p,Wclimb_W0, rho_clm,rho_sl, L_D_clm)
+    function P_W_climb_cor = climb(G,CLmax,ks,prop_efficiency,Wclimb_W0, rho_clm,rho_sl, L_D_clm)
         CL = CLmax/ks^2;
-        P_W_climb = ((sqrt(W_S_sweep)*(G + (L_D_clm)^-1))/(18.97*eta_p*(rho_clm/rho_sl)*(sqrt(CL))));
+        P_W_climb = ((sqrt(W_S_sweep)*(G + (L_D_clm)^-1))/(18.97*prop_efficiency*(rho_clm/rho_sl)*(sqrt(CL))));
         P_W_climb_cor = (Wclimb_W0^(2/3))*P_W_climb;
     end
     %takeoff climb (denver hot day)
     G_to_clm = .04;
     ks = 1.2;
-    P_W_to_clm = climb(G_to_clm, CLmax_to,ks,eta_p,Wclimb_W0,rho,rho_sl,L_D_to_gear);
+    P_W_to_clm = climb(G_to_clm, CLmax_to,ks,prop_efficiency,Wclimb_W0,rho,rho_sl,L_D_to_gear);
    
     %critical loss of thrust
     G_crit = 0.01;
     ks_crit = 1.2;
-    Neng = 7;
-    P_W_crit = climb(G_crit, CLmax_to, ks_crit, eta_p, ...
-        Wclimb_W0, rho_400, rho_sl,L_D_to);
+    P_W_crit = climb(G_crit, CLmax_to, ks_crit, prop_efficiency, Wclimb_W0, rho_400, rho_sl,L_D_to);
     P_W_crit_cor = (Neng/(Neng-1))*P_W_crit;
 
     %balked landing configuration
@@ -145,21 +136,18 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Wcr_W0, Pcr_P0, Wce_W0, Wclimb_
     %balked landing 
     G_land = 0.03;
     ks_land = 1.3;
-    P_W_balked = climb(G_land, CLmax_land, ks_land, eta_p, ...
-        Wland_W0, rho, rho_sl,L_D_land_gear);
+    P_W_balked = climb(G_land, CLmax_land, ks_land, prop_efficiency, Wland_W0, rho, rho_sl,L_D_land_gear);
 
     %plot
     figure();
     hold on;
-    plot(W_S_sweep, P_W_to, 'LineWidth', 1.5);
-    xline(W_S_land_cor, 'LineWidth',1.5);
-    plot(W_S_sweep, P_W_cr_cor, 'LineWidth', 1.5);
-    plot(W_S_sweep, P_W_ce_cor, 'LineWidth', 1.5);
-    plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5);
-    plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5);   
-    plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5);
-
-    legend('Takeoff', 'Cruise', 'Ceiling', 'Takeoff Climb', 'Location', 'best');
+    plot(W_S_sweep, P_W_to, 'LineWidth', 1.5, 'Color', 'Blue', 'DisplayName', 'Takeoff');
+    xline(W_S_land_cor, 'LineWidth', 1.5, 'Color', 'Black', 'DisplayName', 'Landing');
+    plot(W_S_sweep, P_W_cr_cor, 'LineWidth', 1.5, 'Color', 'Red', 'DisplayName', 'Cruise');
+    plot(W_S_sweep, P_W_ce_cor, 'LineWidth', 1.5, 'Color', 'Magenta', 'DisplayName', 'Ceiling');
+    plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5, 'Color', 'Green', 'DisplayName', 'Takeoff Climb');
+    plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', 'Yellow', 'DisplayName', 'Critical Loss of Thrust');   
+    plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'Cyan', 'DisplayName', 'Balked Landing Climb');
     xlabel('Wing Loading, W/S (lb/ft^2)');
     ylabel('P/W');
     title('P/W vs W/S');
