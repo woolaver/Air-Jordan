@@ -104,23 +104,34 @@ while delta > tol
 end
 
 disp('Estimated Aircraft Takeoff Weight:')
-disp(W0/g + "kg")
+disp(W0/g + " kg")
 
 disp('Estimated Empty Takeoff Weight:')
-disp(WE_W0*W0/g + "kg")
+disp(WE_W0*W0/g + " kg")
 
 disp('Estimated Fuel Weight:')
-disp(WF_W0*W0/g + "kg")
+disp(WF_W0*W0/g + " kg")
 
 disp('Payload Weight Crew and Passenger:')
-disp(passenger_weight/g + "kg")
+disp(passenger_weight/g + " kg")
 
 disp('Payload Weight Baggage:')
-disp(baggage_weight/g + "kg")
+disp(baggage_weight/g + " kg")
 
 disp('Electric Propulsion - battery system weight:')
-disp(mass_battery + electric_motor_weight/g + "kg")
+disp(mass_battery + electric_motor_weight/g + " kg")
 
 disp('Total Battery Weight:')
-disp(mass_battery + "kg")
+disp(mass_battery + " kg")
 
+disp('Estimated Cruise Mass:')
+disp(m_cruise + " kg")
+
+disp('Cruise Mass Fraction:')
+disp(1 - (m_cruise/(W0)))
+
+disp('Takeoff Mass Fraction:')
+disp(W3_W2*W2_W1*W1_W0)
+
+disp('Landing Mass Fraction:')
+disp()
