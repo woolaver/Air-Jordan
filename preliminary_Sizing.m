@@ -113,7 +113,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     V_ce = 350;
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
     Pce_P0 = (rho_ce/rho_sl)^0.6;
-    P_W_ce_cor = (P_W_ce)*(Wce_W0/Pce_P0);
+    P_W_ce_cor = ones([1, 200]).*(P_W_ce)*(Wce_W0/Pce_P0);
 
     function P_W_climb_cor = climb(G,CLmax,ks,prop_efficiency,Wclimb_W0, rho_clm,rho_sl, L_D_clm)
         CL = CLmax/ks^2;
@@ -141,16 +141,24 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     %plot
     figure();
     hold on;
-    plot(W_S_sweep, P_W_to, 'LineWidth', 1.5, 'Color', 'Blue', 'DisplayName', 'Takeoff');
-    xline(W_S_land_cor, 'LineWidth', 1.5, 'Color', 'Black', 'DisplayName', 'Landing');
-    plot(W_S_sweep, P_W_cr_cor, 'LineWidth', 1.5, 'Color', 'Red', 'DisplayName', 'Cruise');
-    plot(W_S_sweep, P_W_ce_cor, 'LineWidth', 1.5, 'Color', 'Magenta', 'DisplayName', 'Ceiling');
-    plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5, 'Color', 'Green', 'DisplayName', 'Takeoff Climb');
-    plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', 'Yellow', 'DisplayName', 'Critical Loss of Thrust');   
-    plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'Cyan', 'DisplayName', 'Balked Landing Climb');
+    
+    % Plot lines and assign graphic handles
+    h(1) = plot(W_S_sweep, P_W_to, 'LineWidth', 1.5, 'Color', 'blue', 'DisplayName', 'Takeoff');
+    h(2) = xline(W_S_land_cor, 'LineWidth', 1.5, 'Color', 'black', 'DisplayName', 'Landing');
+    h(3) = plot(W_S_sweep, P_W_cr_cor, 'LineWidth', 1.5, 'Color', 'red', 'DisplayName', 'Cruise');
+    h(4) = plot(W_S_sweep, P_W_ce_cor, 'LineWidth', 1.5, 'Color', 'magenta', 'DisplayName', 'Ceiling');
+    h(5) = plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5, 'Color', 'green', 'DisplayName', 'Takeoff Climb');
+    h(6) = plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', [0.85 0.7 0], 'DisplayName', 'Critical Loss of Thrust'); % Darker yellow for visibility
+    h(7) = plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'cyan', 'DisplayName', 'Balked Landing Climb');
+    
     xlabel('Wing Loading, W/S (lb/ft^2)');
     ylabel('P/W');
     title('P/W vs W/S');
+    grid on;
+    
+    % Explicitly generate the legend using the handles
+    legend(h, 'Location', 'Northeast');
+    
     hold off;
 
 end
