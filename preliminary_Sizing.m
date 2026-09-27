@@ -142,7 +142,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     %maneuver
     phi = deg2rad(60);
     n = 1/cos(phi);
-    P_W_man = ((q*CD0_clean)/W_S_sweep)+(W_S_sweep)*(n^2/(q*pi*AR*e_clean));
+    P_W_man = ((q*CD0_clean)./W_S_sweep)+(W_S_sweep)*(n^2/(q*pi*AR*e_clean));
     P_W_man_cor = P_W_man .* (Wcr_W0 / Pcr_P0);
 
     %plot
