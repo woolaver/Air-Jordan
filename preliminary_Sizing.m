@@ -66,7 +66,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     rho_sl = 0.002377; %slug/ft^3
     [~, ~, ~, rho_cr] = atmoscoesa((alt_cr/3.281)); %kg/m^3
     rho_cr = rho_cr/515.4; %slug/ft^3
-    rho_ce = .001267; %20,000 ft
+    rho_ce = .001545; %14,000 ft, FAA regulations state that unpressurized aircraft flying above 14,000 feet for more than 30 minutes will require supplemental oxygen for flight crew
     rho_400 = 0.0016196; %7200ft, 90degF (400 ft above colorado) 
 
     %CD values for different configurations
@@ -110,6 +110,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     P_W_cr_cor = (P_W_cr).*(Wcr_W0/Pcr_P0); %hp/lb
 
     %ceiling
+
     G = 0.001;
     V_ce = 350;
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
@@ -142,7 +143,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     %maneuver
     phi = deg2rad(60);
     n = 1/cos(phi);
-    P_W_man = ((q*CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q*pi*AR*e_clean));
+    P_W_man = (V_cr/(550*prop_efficiency)).*((q*CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q*pi*AR*e_clean));
     P_W_man_cor = P_W_man .* (Wcr_W0 / Pcr_P0);
 
     %Design point will be at intersection of landing and takeoff curve with
@@ -188,16 +189,16 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     mask = W_S_sweep <= W_S_land_cor;
     x_all = W_S_sweep(mask);
     to_all = P_W_to(mask);
-    man_all = P_W_man_cor(mask);
-    finiteIdx = isfinite(to_all) & isfinite(man_all);
+    cr_all = P_W_cr_cor(mask);
+    finiteIdx = isfinite(to_all) & isfinite(cr_all);
     x_shade = x_all(finiteIdx);
-    y_lower = max(to_all(finiteIdx), man_all(finiteIdx)); % envelope of Takeoff & Cruise
+    y_lower = max(to_all(finiteIdx), cr_all(finiteIdx)); % envelope of Takeoff & Cruise
  
     if numel(x_shade) >= 2
         % Add an exact point right at the landing boundary so the patch
         % edge lines up precisely with the vertical Landing line
         y_to_at_land = interp1(x_shade, to_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
-        y_cr_at_land = interp1(x_shade, man_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
+        y_cr_at_land = interp1(x_shade, cr_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
         y_lower_at_land = max(y_to_at_land, y_cr_at_land);
  
         x_shade = [x_shade, W_S_land_cor];

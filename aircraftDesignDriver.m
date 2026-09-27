@@ -6,13 +6,12 @@ clear
 close all
 clc
 
-%PUT UNITS ON EVERYTHING, THIS SHIT ASS
+%PUT UNITS ON EVERYTHING
 %LABEL ALL ASSUMPTIONS WITH WHERE YOU GOT IT FROM
 
-%estimated 6 electric aircraft engines for improved takeoff performance,
-%Siemens motor has weight of 50 kg
-%https://press.siemens.com/global/en/pressrelease/siemens-develops-world-record-electric-motor-aircraft
-electric_system_mass = 6*50;
+%estimated 10 electric motors driving 6 propellers, see Assignment 4 report
+%for justification
+electric_system_mass = 10*32.5 + 500; %kg
 
 %L/D estimate from typical twin turboprop aircraft from Roskam's
 L_D = 11;
@@ -63,7 +62,7 @@ Neng = 7;
 
 %just an estimation from Adam, will need a way to calculate this or a
 %better estimate
-Pcr_P0 = .9;
+Pcr_P0 = .8;
 
 %assuming unpressurized for now, may want to pressurize later but for how
 %short our flight time is climbing to high altitudes will probably not be
