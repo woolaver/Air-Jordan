@@ -130,7 +130,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     G_crit = 0.01;
     ks_crit = 1.2;
     P_W_crit = climb(G_crit, CLmax_to, ks_crit, prop_efficiency, Wclimb_W0, rho_400, rho_sl,L_D_to);
-    P_W_crit_cor = (Neng/(Neng-1))*P_W_crit;
+    P_W_crit_cor = (Neng/(Neng-3))*P_W_crit;
 
     %balked landing configuration
     CLmax_land = 3.0;
@@ -138,6 +138,12 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     G_land = 0.03;
     ks_land = 1.3;
     P_W_balked = climb(G_land, CLmax_land, ks_land, prop_efficiency, Wland_W0, rho, rho_sl,L_D_land_gear);
+
+    %maneuver
+    phi = deg2rad(60);
+    n = 1/cos(phi);
+    P_W_man = ((q*CD0_clean)/W_S_sweep)+(W_S_sweep)*(n^2/(q*pi*AR*e_clean));
+    P_W_man_cor = P_W_man .* (Wcr_W0 / Pcr_P0);
 
     %plot
     figure();
@@ -151,6 +157,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     h(5) = plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5, 'Color', 'green', 'DisplayName', 'Takeoff Climb');
     h(6) = plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', [0.85 0.7 0], 'DisplayName', 'Critical Loss of Thrust'); % Darker yellow for visibility
     h(7) = plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'cyan', 'DisplayName', 'Balked Landing Climb');
+    h(8) = plot(W_S_sweep, P_W_man_cor, 'LineWidth', 1.5, 'Color', [0.9290, 0.6940, 0.1250], 'DisplayName', 'Maneuver'); %orange
     
     xlabel('Wing Loading, W/S (lb/ft^2)');
     ylabel('P/W');
