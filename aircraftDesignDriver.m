@@ -70,9 +70,14 @@ Pcr_P0 = .9;
 %worth it
 alt_cr = 12500; %feet
 
-preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr)
+design_margin = .025; % 2.5% margin on P/W, W/S design point
 
+[W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr, design_margin);
 
+disp("W/S Design Point: " + W_S_point)
+disp("P/W Design Point: " + P_W_point)
+
+disp('--------------------------------------')
 %% Cost Estimation
 
 tb = 3; % our block time is 3 hours based on research

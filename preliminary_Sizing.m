@@ -1,4 +1,4 @@
-function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr)
+function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to, prop_efficiency, Wcr_W0, Wclimb_W0, Wce_W0, Wland_W0, Pcr_P0, Neng, alt_cr, design_margin)
 
     %Preliminary Sizing function to create T/W - W/S design space
     
@@ -61,7 +61,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     hold off
 
     %variables
-    W_S_sweep = linspace(0, 100, 200); %create a wing loading var to sweep over
+    W_S_sweep = linspace(0, 50, 1000); %create a wing loading var to sweep over
     rho  = 0.001640; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
     rho_sl = 0.002377; %slug/ft^3
     [~, ~, ~, rho_cr] = atmoscoesa((alt_cr/3.281)); %kg/m^3
@@ -114,7 +114,7 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     V_ce = 350;
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
     Pce_P0 = (rho_ce/rho_sl)^0.8;
-    P_W_ce_cor = ones([1, 200]).*(P_W_ce)*(Wce_W0/Pce_P0);
+    P_W_ce_cor = ones([1, 1000]).*(P_W_ce)*(Wce_W0/Pce_P0);
 
     function P_W_climb_cor = climb(G,CLmax,ks,prop_efficiency,Wclimb_W0, rho_clm,rho_sl, L_D_clm)
         CL = CLmax/ks^2;
@@ -142,14 +142,25 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     %maneuver
     phi = deg2rad(60);
     n = 1/cos(phi);
-    P_W_man = ((q*CD0_clean)/W_S_sweep)+(W_S_sweep)*(n^2/(q*pi*AR*e_clean));
+    P_W_man = ((q*CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q*pi*AR*e_clean));
     P_W_man_cor = P_W_man .* (Wcr_W0 / Pcr_P0);
 
+    %Design point will be at intersection of landing and takeoff curve with
+    %additional margin
+
+    W_S_land_point = W_S_land_cor(1);
+    
+    P_W_to_index = round(W_S_land_point*(1000/50));
+
+    W_S_point = W_S_land_point*(1-design_margin);
+    P_W_point = P_W_to(P_W_to_index)*(1 + design_margin);
+    
     %plot
     figure();
     hold on;
-    
+
     % Plot lines and assign graphic handles
+    
     h(1) = plot(W_S_sweep, P_W_to, 'LineWidth', 1.5, 'Color', 'blue', 'DisplayName', 'Takeoff');
     h(2) = xline(W_S_land_cor, 'LineWidth', 1.5, 'Color', 'black', 'DisplayName', 'Landing');
     h(3) = plot(W_S_sweep, P_W_cr_cor, 'LineWidth', 1.5, 'Color', 'red', 'DisplayName', 'Cruise');
@@ -157,12 +168,65 @@ function S_wet = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLmax_clean, CLmax_to
     h(5) = plot(W_S_sweep, P_W_to_clm, 'LineWidth', 1.5, 'Color', 'green', 'DisplayName', 'Takeoff Climb');
     h(6) = plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', [0.85 0.7 0], 'DisplayName', 'Critical Loss of Thrust'); % Darker yellow for visibility
     h(7) = plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'cyan', 'DisplayName', 'Balked Landing Climb');
-    h(8) = plot(W_S_sweep, P_W_man_cor, 'LineWidth', 1.5, 'Color', [0.9290, 0.6940, 0.1250], 'DisplayName', 'Maneuver'); %orange
+    h(8) = plot(W_S_sweep, P_W_man_cor, 'LineWidth', 1.5, 'Color', [0.7290, 0.1, 0.9250], 'DisplayName', 'Maneuver'); %orange
+    h(9) = plot(W_S_point, P_W_point, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
     
+    %--- Feasible design space shading -----------------------------------
+    % Feasible region: to the LEFT of the Landing line (W/S_land_cor) and
+    % ABOVE both the Takeoff and Cruise curves.
+ 
+    % Use the axes' own auto-scaled y-limit (based on the finite line
+    % data already plotted) as the top of the shaded patch. This avoids
+    % blowing up if any curve contains Inf/NaN (e.g. P_W_cr_cor at
+    % W_S_sweep = 0, or P_W_crit_cor if Neng = 3).
+    yl = ylim;
+    y_top = yl(2);
+ 
+    % Keep only the sweep points at or left of the landing constraint,
+    % and drop any non-finite samples (e.g. the W/S = 0 cruise point,
+    % which divides by zero and evaluates to Inf).
+    mask = W_S_sweep <= W_S_land_cor;
+    x_all = W_S_sweep(mask);
+    to_all = P_W_to(mask);
+    man_all = P_W_man_cor(mask);
+    finiteIdx = isfinite(to_all) & isfinite(man_all);
+    x_shade = x_all(finiteIdx);
+    y_lower = max(to_all(finiteIdx), man_all(finiteIdx)); % envelope of Takeoff & Cruise
+ 
+    if numel(x_shade) >= 2
+        % Add an exact point right at the landing boundary so the patch
+        % edge lines up precisely with the vertical Landing line
+        y_to_at_land = interp1(x_shade, to_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
+        y_cr_at_land = interp1(x_shade, man_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
+        y_lower_at_land = max(y_to_at_land, y_cr_at_land);
+ 
+        x_shade = [x_shade, W_S_land_cor];
+        y_lower = [y_lower, y_lower_at_land];
+        [x_shade, sortIdx] = sort(x_shade);
+        y_lower = y_lower(sortIdx);
+ 
+        % Clip the lower envelope so it never pokes above the patch top
+        y_lower = min(y_lower, y_top);
+ 
+        patch_x = [x_shade, fliplr(x_shade)];
+        patch_y = [repmat(y_top, 1, numel(x_shade)), fliplr(y_lower)];
+ 
+        h_shade = fill(patch_x, patch_y, [0.6 0.85 0.6], 'FaceAlpha', 0.35, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+        uistack(h_shade, 'bottom'); % draw behind the constraint lines
+    end
+    ylim(yl); % fill() can auto-expand the axes; restore the original limits
+    %----------------------------------------------------------------------
+ 
+    % Explicitly generate the legend using the handles
+    legend(h, 'Location', 'Northeast');
+    
+    hold off;
+
     xlabel('Wing Loading, W/S (lb/ft^2)');
     ylabel('P/W');
     title('P/W vs W/S');
-    grid on;
+    xlim([0, 20])
+    ylim([0, 1.5])
 
     % Explicitly generate the legend using the handles
     legend(h, 'Location', 'Northeast');
