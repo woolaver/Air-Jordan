@@ -63,7 +63,7 @@ Neng = 7;
 
 %just an estimation from Adam, will need a way to calculate this or a
 %better estimate
-Pcr_P0 = .9;
+Pcr_P0 = .8;
 
 %assuming unpressurized for now, may want to pressurize later but for how
 %short our flight time is climbing to high altitudes will probably not be
