@@ -85,7 +85,9 @@ disp('--------------------------------------')
 
 %% P-S Plot Conversion
 
+S_sweep = 1600 : 1 : 2000;
 
+% [P_point, S_point] = PS_constraintcurves(S_sweep, W0, W_S_point, P_W_point);
 
 
 
