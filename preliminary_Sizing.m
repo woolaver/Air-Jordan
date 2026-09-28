@@ -22,7 +22,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
 
     %Roskam's assumptions on effect of flaps/landing gear (took the average
     %of each range)
-    CD0_climb = CD0_clean + .0325
+    CD0_climb = CD0_clean + .0325;
     CD0_climb_gear = CD0_clean + .0325 + .02;
     %note takeoff currently = landing, assuming same configuration
     CD0_takeoff = CD0_clean + .065;
