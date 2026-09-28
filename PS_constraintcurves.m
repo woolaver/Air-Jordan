@@ -1,7 +1,6 @@
 function[P_point, S_point] = PS_constraintcurves(S_sweep, W0, W_S_point, P_S_point)
 
 
-
     % Variables
     % Densities
     rho  = 0.001640; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
@@ -87,14 +86,58 @@ function[P_point, S_point] = PS_constraintcurves(S_sweep, W0, W_S_point, P_S_poi
 
     V_cr = 379.76; %ft/s
     q_cr = (rho_cr*V_cr^2)/2;
+
+    for i = 1:length(S_sweep)
+
+        % parameters for sweep
+        S0 = S_sweep(i);
+        P_cruise(i) = 1500; % initial power guess in hp
+        tol = 0.1;
+        converged = false;
+
+        while converged == false
+            W0 = weightIterationEstimate(P_cruise(i), Wguess, S0, W_S_point);
+            W_S = W0 / S0;
+            P_S_cruise = (V_cr/(550*prop_efficiency)).*((q_cr./W_S).*CD0_clean + (W_S./q_cr).*k_clean); 
+            P_new = P_S_cruise * S0;
+            if P_new - P_cruise(i)<= tol
+                converged =  true;
+            end
+            P_cruise(i) = P_new;
+        end
+    end
+%{
     W_S_cr = W_S_sweep.*Wcr_W0;
     P_W_cr = (V_cr/(550*prop_efficiency)).*((q_cr./W_S_cr).*CD0_clean + (W_S_cr./q_cr).*k_clean); 
     P_W_cr_cor = (P_W_cr).*(Wcr_W0/Pcr_P0); %hp/lb
-    
+%}  
+
+    % includes correction value for power above, will consider later
+
     %% Ceiling Condition 
-    
+
     G = 0.001;
     V_ce = 350;
+    
+    for i = 1:length(S_sweep)
+
+        % parameters for sweep
+        S0 = S_sweep(i);
+        P_ceiling(i) = 1500; % initial power guess in hp
+        tol = 0.1;
+        converged = false;
+
+        while converged == false
+            W0 = weightIterationEstimate(P_ceiling(i), Wguess, S0, W_S_point);
+            P_S_ceiling = V_ce/(550*prop_efficiency)*(G + 2*sqrt(CD0_clean*k_clean));
+            P_new = P_S_ceiling * S0;
+            if P_new - P_ceiling(i)<= tol
+                converged =  true;
+            end
+            P_ceiling(i) = P_new;
+        end
+    end
+    
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
     Pce_P0 = (rho_ce/rho_sl)^0.8;
     P_W_ce_cor = ones([1, 1000]).*(P_W_ce)*(Wce_W0/Pce_P0);

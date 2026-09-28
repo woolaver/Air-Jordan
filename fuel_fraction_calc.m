@@ -24,8 +24,8 @@ function [Wf, Wf_W0] = fuel_fraction_calc(P, W0, c_sl)
     %}  
     
     % parameters for cruise segment
-    V = 225; % airspeed in knots
-    Rc = 200; % cruise distance in nmi
+    V = 375.79; % airspeed in ft / s
+    Rc = 200 * 6076; % cruise distance in feet
     L_D = 20.5; % calculated L/D in cruise
 
     W4_W3 = exp(-Rc / V*(L_D)); % cruise segment
