@@ -14,7 +14,7 @@ clc
 electric_system_mass = 10*32.5 + 500; %kg
 
 %L/D estimate from drag polar estimate using Roskam's estimations
-L_D = 14.5;
+L_D = 20.5;
 
 %specific fuel consumption of general aviation piston engine
 cp = .4; %lb/(hp*h)
