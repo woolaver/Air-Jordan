@@ -1,6 +1,6 @@
 %Complete iteration loop for initial aircraft weight estimation
 
-function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation)
+function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation)
 
 g = 9.8; %m/s^2
 num_passengers = 8; %7 + 1 pilot
@@ -111,5 +111,5 @@ disp(Wl_W0)
 MTOW = W0;
 Wcr_W0 = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
 Wclimb_W0 = W3_W2*W2_W1*W1_W0;
-
 Wce_W0 = W4_W3*W3_W2*W2_W1*W1_W0;
+Wto_W0 = W2_W1*W1_W0;
