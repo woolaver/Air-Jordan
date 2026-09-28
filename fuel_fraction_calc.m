@@ -18,7 +18,7 @@ CL = sqrt(CD0 / k);
 L_D = (0.94 * CL) / (CD0 + k*CL^2);
 
 W4_W3 = exp(-Rc / V*(L_D));
-W5_W4 = ;  % historical value
+W5_W4 = 0.99;  % historical value
 W6_W5 = 1; % historical value - assuming fully electric loiter
 W6_W0 = W6_W5 * W5_W4 * W4_W3 * W3_W2 * W2_W1 * W1_W0;
 

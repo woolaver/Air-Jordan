@@ -45,7 +45,7 @@ disp('--------------------------------------')
 AR = 11;
 W_S = 10; %used for CD0 estimate only, if we can get a better way to find this we should
 
-%Raymer's estimations for Cf, using twin engine small aircraft
+% Raymer's estimations for Cf, using twin engine small aircraft
 Cf_clean = .0045;
 
 %estimate CLmax for different configurations
@@ -78,6 +78,35 @@ disp("W/S Design Point: " + W_S_point)
 disp("P/W Design Point: " + P_W_point)
 
 disp('--------------------------------------')
+
+
+
+%% P-S Plot Conversion
+
+
+S_sweep = 1600 : 1860 : 2020; % Wing Area Sweep based on initial 
+
+for i = 1:length(S_sweep)
+
+    % parameters for sweep
+    S0 = S_sweep(i);
+    P_i = 1500; % initial power guess in hp
+    tol = 0.1;
+    converged = false;
+
+    while converged = false
+        W = W(S0, P_i);
+        % Compute  W / S0
+        P_W_new = f(f/S0);
+        P_new = P_W_new * W;
+        if P_new - P(i) <= tol
+            converged =  true
+        end
+        P(i) = P_new
+    end
+end
+
+
 %% Cost Estimation
 
 tb = 3; % our block time is 3 hours based on research
