@@ -59,7 +59,7 @@ CLmax_to = 5;
 
 CLmax_climb = 3.472;
 
-%assuming 6 electric engines and one combustion
+% 6 electric engine, one combustion engine 
 Neng = 7;
 
 %just an estimation from Adam, will need a way to calculate this or a
@@ -89,7 +89,7 @@ p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
     'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
     'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr);
 
-S_sweep = 1600:10:2000;
+S_sweep = 500:10:4000;
 
 [P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
 disp("P-S design power: " + P_point + " hp");
