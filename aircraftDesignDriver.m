@@ -36,7 +36,7 @@ disp('WEIGHT ESTIMATION:')
 
 %returns W0 in kg, Wcr_W0 is cruise weight fraction assuming fuel cruise is
 %before electric cruise, Wl_W0 is landing weight fraciton
-[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation);
+[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration_old(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation);
 
 disp('--------------------------------------')
 %% Preliminary Sizing
@@ -85,10 +85,14 @@ disp('--------------------------------------')
 
 %% P-S Plot Conversion
 
-S_sweep = 1600 : 1 : 2000;
+p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
+    'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
+    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr);
 
-% [P_point, S_point] = PS_constraintcurves(S_sweep, W0, W_S_point, P_W_point);
+S_sweep = 1600:10:2000;
 
+[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
+disp("P-S design power: " + P_point + " hp");
 
 
 %% Cost Estimation

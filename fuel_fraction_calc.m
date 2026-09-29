@@ -12,7 +12,7 @@
          % eta - propeller efficiency
 
 
-function [Wf, Wf_W0] = fuel_fraction_calc(P, W0, S, c_sl, eta)
+function [Wf, Wf_W0, L_D] = fuel_fraction_calc(P, W0, S, c_sl, eta)
 
     AR = 11;
     e = 0.825;
