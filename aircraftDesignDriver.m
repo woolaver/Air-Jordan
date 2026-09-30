@@ -95,6 +95,7 @@ S_sweep = 500:10:4000;
 disp("P-S design power: " + P_point + " hp");
 
 
+
 %% Cost Estimation
 
 tb = 3; % our block time is 3 hours based on research

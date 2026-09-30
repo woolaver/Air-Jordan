@@ -123,7 +123,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     % ---------- plot ----------
     colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
     figure(); hold on;
-    h = gobjects(1, nC+1);
+    h = gobjects(1, nC+2);
     for k = 1:nC
         h(k) = plot(S_sweep, P(:,k), 'LineWidth', 1.5, 'Color', colors{k}, ...
             'DisplayName', names{k});
@@ -145,7 +145,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     % h(nC+2) = plot(S_point, P_point, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
     ylim([0 3000]);
     xlim([S_sweep(1) S_sweep(end)]);
-    legend(h, 'Location', 'best');
+    
     xlabel('Wing Area, S (ft^2)');
     ylabel('Installed Power, P (hp)');
     title('P vs S');
@@ -155,8 +155,8 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     %%  Weight meshgrid over plot
     
 
-    S_mesh = linspace(min(S_sweep), max(S_sweep), 50);
-    P_mesh = linspace(0, 2000, 50);
+    S_mesh = linspace(min(S_sweep), max(S_sweep), 200);
+    P_mesh = linspace(0, 3000, 200);
 
     [Smesh, Pmesh] = meshgrid(S_mesh, P_mesh);
 
@@ -176,20 +176,23 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         end
     end
 
-    hold on
+    hold on;
 
     % Weight contours
-    Wlevels = 16000:500:22000;
+    Wlevels = 5000:100:9500;
 
     [C,hc] = contour(Smesh, Pmesh, Wmesh, Wlevels, ...
-        'LineColor', 'k', ...
-        'LineWidth', 1);
+        'LineColor', 'k', 'LineStyle', '--',  'LineWidth', 0.75);
 
     clabel(C,hc,'FontSize',8);
+    h_weight = plot(nan, nan, 'k--', 'LineWidth', 0.75, 'DisplayName', 'Weight Contours');
+
+    legend([h(1:nC-1), h(nC+1), h_weight], 'Location', 'best');
 
 
     hold off;
 
+ 
 end
 
 
