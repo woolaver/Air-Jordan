@@ -99,15 +99,16 @@ disp("P-S design wing area: " + S_point + "ft^2");
 [W0_design, WeightStruct] = weightIterationEstimate_new(P_point, W0, S_point, W_S_point, prop_efficiency);
 
 disp('New Weight Values (lbs):')
-disp(WeightStruct)
+disp(WeightStruct);
 
 
+%% Cost Output based on Design Points
+%{
+[c] = aircraftcost(aircraft_data_01);
 
-
-%% Cost Estimation
-
-tb = 3; % our block time is 3 hours based on research
-% maintenance labor rate in USD
-
-K = 2.75; % regional route factor
-R = 400; % RFP nmi range 
+disp("Total Cost = $" + c.tot_cost );
+disp("COC", c.T1);
+disp("FOC", c.T2);
+disp("IOC", c.T3);
+disp("Aircraft Cost", c.T0);
+%}

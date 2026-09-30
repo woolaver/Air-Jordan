@@ -143,7 +143,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     xlim([S_sweep(1) S_sweep(end)]);
     
     xlabel('Wing Area, S (ft^2)');
-    ylabel('Installed Power, P (hp)');
+    ylabel('Power, P (hp)');
     title('P vs S');
     grid off; hold on;
 
