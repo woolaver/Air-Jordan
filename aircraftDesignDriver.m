@@ -84,19 +84,24 @@ disp('--------------------------------------')
 
 
 %% P-S Plot Conversion
+design_margin = 0.05;
 
 p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
     'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
-    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr);
+    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr, 'design_margin', design_margin);
 
 S_sweep = 500:10:4000;
 
 [P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
 disp("P-S design power: " + P_point + " hp");
+disp("P-S design wing area: " + S_point + "ft^2");
 
+[W0_design, WeightStruct] = weightIterationEstimate_new(P_point, W0, S_point, W_S_point, prop_efficiency);
 
 disp('New Weight Values (lbs):')
-disp(ps.WeightStruct)
+disp(WeightStruct)
+
+
 
 
 %% Cost Estimation

@@ -91,18 +91,22 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
         S_land = NaN;
     end
 
-    P_at = nan(1, nC);
-    for k = 1:nC
-        mk = isfinite(P(:,k));
-        if nnz(mk) >= 2
-            P_at(k) = interp1(S_sweep(mk), P(mk,k), S_point, 'linear', 'extrap');
-        end
-    end
-    [P_point, kd] = max(P_at);
+    % ---------- Design point: Landing / Maneuver intersection ----------
+    
+    maneuver_idx = find(strcmp(names, 'Maneuever'));
+
+    P_maneuver_land = interp1( ...
+        S_sweep, P(:,maneuver_idx), S_land, 'linear');
+
+    S_design = S_land;
+    P_design = P_maneuver_land * (1 + p.design_margin);
+
+    P_point = P_design;
+    S_point = S_design;
+
 
     out = struct('S',S_sweep, 'P',P, 'W0',Wc, 'names',{names}, ...
-        'S_land',S_land, 'P_env',Penv, 'P_at_design',P_at, ...
-        'governing',names{kd}, 'WeightStruct', weightstruct);
+        'S_land',S_land, 'P_env',Penv, 'P_point', P_design, 'S_point', S_design, 'WeightStruct', weightstruct);
     %{
 disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         " hp (governed by " + names{kd} + ")")
@@ -110,25 +114,15 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     disp("Landing limit: minimum S = " + S_land + " ft^2")
 
 
-    %{ 
-    debug
-
-    disp('');
-    disp(S_sweep);
-
-    disp('P:');
-    disp(P)
-    %}
- 
+    
     
 
     % ---------- plot ----------
-    colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
+    %colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
     figure(); hold on;
     h = gobjects(1, nC+2);
     for k = 1:nC
-        h(k) = plot(S_sweep, P(:,k), 'LineWidth', 1.5, 'Color', colors{k}, ...
-            'DisplayName', names{k});
+        h(k) = plot(S_sweep, P(:,k), 'LineWidth', 1.5, 'DisplayName', names{k});
     end
     ytop = 1.3*max(Penv, [], 'omitnan');
     if isfinite(S_land)
@@ -152,6 +146,9 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     ylabel('Installed Power, P (hp)');
     title('P vs S');
     grid off; hold on;
+
+    scatter(S_point, P_point, 'r', 'filled');
+    hold on;
 
 
     %%  Weight meshgrid over plot
@@ -181,7 +178,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     hold on;
 
     % Weight contours
-    Wlevels = 5000:100:12000;
+    Wlevels = 5000:100:11000;
 
     [C,hc] = contour(Smesh, Pmesh, Wmesh, Wlevels, ...
         'LineColor', 'k', 'LineStyle', '--',  'LineWidth', 0.75);
@@ -189,7 +186,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     clabel(C,hc,'FontSize',8);
     h_weight = plot(nan, nan, 'k--', 'LineWidth', 0.75, 'DisplayName', 'Weight Contours');
 
-    legend([h(1:nC-1), h(nC+1), h_weight], 'Location', 'best');
+    legend([h(1:nC), h(nC+1), h_weight], 'Location', 'best');
 
 
     hold off;
