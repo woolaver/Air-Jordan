@@ -57,7 +57,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
             Pk = P_prev(k);
             ok = false;
             for it = 1:100
-                [W0, ~] = weightIterationEstimate_new(Pk, W0, S, W_S_point, p.prop_efficiency);
+                [W0, weightstruct] = weightIterationEstimate_new(Pk, W0, S, W_S_point, p.prop_efficiency);
                % disp("Pk = " + Pk)
               %  disp("W0 iteration = " + W0)
                 if ~isfinite(W0), break, end            
@@ -113,12 +113,20 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     %{ 
     debug
 
-    disp('S_Sweep:');
+    disp('');
     disp(S_sweep);
 
     disp('P:');
     disp(P)
     %}
+ 
+    disp('New Weight Values (lbs):');
+    disp('MTOW: ' + W0(1));
+    disp('Empty Weight: ' + weightstruct.WE(1));
+    disp('Fuel Weight: ' + weightstruct.Wf(1))
+    disp('Battery Weight: ' + weightstruct.W_batt(1));
+    disp('Payload Weight: ' + (weightstruct.W_crew + weightstruct.W_payload(1)));
+    disp('Electric Motor Weight: ' + weightstruct.W_elec_motor(1));
 
     % ---------- plot ----------
     colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
