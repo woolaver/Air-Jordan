@@ -95,6 +95,9 @@ S_sweep = 500:10:4000;
 disp("P-S design power: " + P_point + " hp");
 
 
+disp('New Weight Values (lbs):')
+disp(ps.WeightStruct)
+
 
 %% Cost Estimation
 

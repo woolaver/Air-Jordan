@@ -102,7 +102,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
 
     out = struct('S',S_sweep, 'P',P, 'W0',Wc, 'names',{names}, ...
         'S_land',S_land, 'P_env',Penv, 'P_at_design',P_at, ...
-        'governing',names{kd});
+        'governing',names{kd}, 'WeightStruct', weightstruct);
     %{
 disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         " hp (governed by " + names{kd} + ")")
@@ -120,13 +120,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     disp(P)
     %}
  
-    disp('New Weight Values (lbs):');
-    disp('MTOW: ' + W0(1));
-    disp('Empty Weight: ' + weightstruct.WE(1));
-    disp('Fuel Weight: ' + weightstruct.Wf(1))
-    disp('Battery Weight: ' + weightstruct.W_batt(1));
-    disp('Payload Weight: ' + (weightstruct.W_crew + weightstruct.W_payload(1)));
-    disp('Electric Motor Weight: ' + weightstruct.W_elec_motor(1));
+    
 
     % ---------- plot ----------
     colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
@@ -187,7 +181,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     hold on;
 
     % Weight contours
-    Wlevels = 5000:100:9500;
+    Wlevels = 5000:100:12000;
 
     [C,hc] = contour(Smesh, Pmesh, Wmesh, Wlevels, ...
         'LineColor', 'k', 'LineStyle', '--',  'LineWidth', 0.75);
