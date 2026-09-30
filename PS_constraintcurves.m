@@ -98,8 +98,8 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
     P_maneuver_land = interp1( ...
         S_sweep, P(:,maneuver_idx), S_land, 'linear');
 
-    S_design = S_land;
-    P_design = P_maneuver_land * (1 + p.design_margin);
+    S_design = S_land * p.design_margin;
+    P_design = P_maneuver_land * (p.design_margin);
 
     P_point = P_design;
     S_point = S_design;

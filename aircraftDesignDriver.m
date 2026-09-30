@@ -84,7 +84,7 @@ disp('--------------------------------------')
 
 
 %% P-S Plot Conversion
-design_margin = 0.05;
+design_margin = 1.025;
 
 p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
     'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
