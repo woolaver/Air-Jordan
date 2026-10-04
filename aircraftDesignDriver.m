@@ -103,7 +103,7 @@ disp(WeightStruct);
 
 
 %% Cost Output based on Design Points
-%{
+
 [c] = aircraftcost(aircraft_data_01);
 
 disp("Total Cost = $" + c.tot_cost );
@@ -111,4 +111,3 @@ disp("COC", c.T1);
 disp("FOC", c.T2);
 disp("IOC", c.T3);
 disp("Aircraft Cost", c.T0);
-%}
