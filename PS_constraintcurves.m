@@ -80,7 +80,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
         end
     end
 
-    % ---------- envelope, landing limit, design point ----------
+    % landing
     [Penv, kmax] = max(P, [], 2);                       
     W0env = Wc(sub2ind(size(Wc), (1:nS)', kmax));
     WS_of_S = W0env./S_sweep;
@@ -91,7 +91,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
         S_land = NaN;
     end
 
-    % ---------- Design point: Landing / Maneuver intersection ----------
+    % find intial design point
     
     maneuver_idx = find(strcmp(names, 'Maneuever'));
 
@@ -116,8 +116,8 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
 
     
     
-
-    % ---------- plot ----------
+    % -------------------------------
+    %  plot 
     %colors = {'blue','red','magenta','green',[0.85 0.7 0],'cyan',[0.729 0.1 0.925]};
     figure(); hold on;
     h = gobjects(1, nC+2);
@@ -138,7 +138,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     else
         h(nC+1) = plot(nan, nan, 'DisplayName', 'Landing (n/a)');
     end
-    % h(nC+2) = plot(S_point, P_point, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
+  
     ylim([0 3000]);
     xlim([S_sweep(1) S_sweep(end)]);
     
