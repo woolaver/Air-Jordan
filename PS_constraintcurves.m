@@ -184,11 +184,30 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         'LineColor', 'k', 'LineStyle', '--',  'LineWidth', 0.75);
 
     clabel(C,hc,'FontSize',8);
+
     h_weight = plot(nan, nan, 'k--', 'LineWidth', 0.75, 'DisplayName', 'Weight Contours');
 
-    legend([h(1:nC), h(nC+1), h_weight], 'Location', 'best');
+    % h3x motor design point
+    N_motors = 10;    
+    P_motor_kW = 140;   
+    kW_to_hp = 1.34102;
+    P_rated_hp = N_motors * P_motor_kW * kW_to_hp; 
+    % Offtake losses
+    eta_offtake = 0.94;                        
+    P_avail_hp = P_rated_hp * eta_offtake;     
+    S_discrete = S_land * 1.05; 
 
+    %plot installed & net available power
+    h_rated = yline(P_rated_hp, 'k--', 'LineWidth', 1.8, ...
+        'DisplayName', sprintf('Installed Rated (%d x H3X, %.0f hp)', N_motors, P_rated_hp));
+    h_avail = yline(P_avail_hp, ':', 'Color', [0.2 0.2 0.2], 'LineWidth', 1.5, ...
+        'DisplayName', sprintf('Available Net (-6%% offtakes, %.0f hp)', P_avail_hp));
 
+    %plot design point
+    h_pt = plot(S_discrete, P_avail_hp, 'kp', 'MarkerSize', 14, ...
+        'MarkerFaceColor', 'y', 'MarkerEdgeColor', 'k', 'LineWidth', 1.5, ...
+        'DisplayName', sprintf('Final Design Point (S=%.0f ft^2, P=%.0f hp)', S_discrete, P_avail_hp));
+    legend([h(1:nC), h(nC+1), h_weight, h_rated, h_avail, h_pt], 'Location', 'northeastoutside');
     hold off;
 
  
