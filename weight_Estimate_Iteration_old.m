@@ -87,29 +87,29 @@ disp('Estimated Aircraft Takeoff Weight:')
 disp(W0/g + "kg, " + W0/g * 2.205 + " lbs")
 
 disp('Estimated Empty Takeoff Weight:')
-disp(WE_W0*W0/g + "kg")
+disp(WE_W0*W0/g * 2.205 + "lbs")
 
 disp('Estimated Fuel Weight:')
-disp(WF_W0*W0/g + "kg")
+disp(WF_W0*W0/g * 2.205 + "lbs")
 
 disp('Payload Weight Crew and Passenger:')
-disp(passenger_weight/g + "kg")
+disp(passenger_weight/g * 2.205 + "lbs")
 
 disp('Payload Weight Baggage:')
-disp(baggage_weight/g + "kg")
+disp(baggage_weight/g * 2.205 + "lbs")
 
 disp('Electric Propulsion - battery system weight:')
-disp(mass_battery + electric_motor_weight/g + "kg")
+disp((mass_battery + electric_motor_weight/g)  * 2.205 + "lbs")
 
 disp('Total Battery Weight:')
-disp(mass_battery + "kg")
+disp(mass_battery * 2.205 + "lbs ")
 
 disp('Landing Weight Fraction:')
 Wl_W0 = (W9_W8*W8_W7*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0);
 disp(Wl_W0)
 
-MTOW = W0;
-Wcr_W0 = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
+MTOW = W0 * 2.205;
+Wcr_W0 = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0 ;
 Wclimb_W0 = W3_W2*W2_W1*W1_W0;
 Wce_W0 = W4_W3*W3_W2*W2_W1*W1_W0;
 Wto_W0 = W2_W1*W1_W0;

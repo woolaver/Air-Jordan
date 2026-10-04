@@ -22,7 +22,7 @@ p.ticket_price   = 200;      % [$]      One-way fare per passenger
 % With original airframe kept constant and battery reduced to 1,100 lb:
 % New MTOW = 14,455 - (4,093 - 1,100) - delta_fuel ~= 11,330 lb
 p.MTOW           = 11330;    % [lb]     Takeoff weight reflecting only battery/fuel delta
-p.n_engines      = 2;        % [-]      Twin turboprop layout
+p.n_engines      = 7;        % [-]    6 electric one fuel  
 
 % Installed power calculation:
 p.PW_kWkg        = 0.18;     % [kW/kg]  Power loading

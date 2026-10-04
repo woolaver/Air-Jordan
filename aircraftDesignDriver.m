@@ -36,7 +36,7 @@ disp('WEIGHT ESTIMATION:')
 
 %returns W0 in kg, Wcr_W0 is cruise weight fraction assuming fuel cruise is
 %before electric cruise, Wl_W0 is landing weight fraciton
-[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation);
+[W0, Wcr_W0, Wland_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration_old(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation);
 
 disp('--------------------------------------')
 %% Preliminary Sizing
@@ -59,7 +59,7 @@ CLmax_to = 5;
 
 CLmax_climb = 3.472;
 
-%assuming 6 electric engines and one combustion
+% 6 electric engine, one combustion engine 
 Neng = 7;
 
 %just an estimation from Adam, will need a way to calculate this or a
@@ -84,35 +84,31 @@ disp('--------------------------------------')
 
 
 %% P-S Plot Conversion
+design_margin = 1.025;
+
+p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
+    'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
+    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr, 'design_margin', design_margin);
+
+S_sweep = 500:10:4000;
+
+[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
+disp("P-S design power: " + P_point + " hp");
+disp("P-S design wing area: " + S_point + "ft^2");
+
+[W0_design, WeightStruct] = weightIterationEstimate_new(P_point, W0, S_point, W_S_point, prop_efficiency);
+
+disp('New Weight Values (lbs):')
+disp(WeightStruct);
 
 
-S_sweep = 1600 : 1860 : 2020; % Wing Area Sweep based on initial 
+%% Cost Output based on Design Points
+%{
+[c] = aircraftcost(aircraft_data_01);
 
-for i = 1:length(S_sweep)
-
-    % parameters for sweep
-    S0 = S_sweep(i);
-    P_i = 1500; % initial power guess in hp
-    tol = 0.1;
-    converged = false;
-
-    while converged = false
-        W = W(S0, P_i);
-        % Compute  W / S0
-        P_W_new = f(f/S0);
-        P_new = P_W_new * W;
-        if P_new - P(i) <= tol
-            converged =  true
-        end
-        P(i) = P_new
-    end
-end
-
-
-%% Cost Estimation
-
-tb = 3; % our block time is 3 hours based on research
-% maintenance labor rate in USD
-
-K = 2.75; % regional route factor
-R = 400; % RFP nmi range 
+disp("Total Cost = $" + c.tot_cost );
+disp("COC", c.T1);
+disp("FOC", c.T2);
+disp("IOC", c.T3);
+disp("Aircraft Cost", c.T0);
+%}

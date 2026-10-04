@@ -18,13 +18,13 @@ p.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
 p.ticket_price = 200;     % [$]      average one-way fare on the target route
 
 % ---------- Aircraft Specific ----------
-p.MTOW        = 14455;    % [lb]
-p.PW          = 0.20;     % [kW/kg]  Power - Weight ratio
+p.MTOW        = 10391;    % [lb]
+p.PW          = 0.1;     % [kW/kg]  Power - Weight ratio
 p.SHP_to      = p.PW*p.MTOW; % [shp] set directly to override SHP_per_lb
 p.n_engines   = 6;        % [-]      number of engines
 
 % ---------- Fuel / Oil Specific (per trip) ----------
-p.W_f         = 1252;     % [lb]     Fuel Weight (weight iteration code)
+p.W_f         = 347.07;     % [lb]     Fuel Weight (weight iteration code)
 p.P_f         = 2.24;     % [$/gal]  Jet-A price (then-year $)
 p.rho_f       = 6.7;      % [lb/gal] Jet-A density
 p.oil_frac    = 0.01;     % [-]      oil consumed as a fraction of block fuel
@@ -33,14 +33,14 @@ p.rho_oil     = 3.7;      % [lb/gal] density of aircraft lubricant oil
 p.W_oil       = 0.0125 * p.W_f * p.tb / 100; % [lbs] weight of oil 
 
 % ---------- Battery / Electric (per trip) ----------
-p.W_b         = 4093;     % [lb]     installed pack weight
+p.W_b         = 2348.7;     % [lb]     installed pack weight
 p.DoD         = 0.85;     % [-]      usable depth of discharge per trip
 p.eta_chg     = 0.92;     % [-]      wall-to-pack charging efficiency
 p.P_elec      = 0.15;     % [$/kWh]  electricity price (then-year $)
 
 % ---------- Hybrid Architecture ----------
 p.f_motor_power  = 1.0;   % [-]      electric motor power as a fraction of SHP_to
-p.P_motor_hp     = 180;   % engine horsepower
+p.P_motor_hp     = 188;   % engine horsepower
 p.C_motor_per_hp = 150;   % [$/hp]
 p.C_batt_kWh     = 520;   %   [$/kWh]
 p.E_batt         = 400  % [kWh]
