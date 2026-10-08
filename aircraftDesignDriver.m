@@ -14,21 +14,21 @@ clc
 electric_system_mass = 10*32.5 + 500; %kg
 
 %L/D estimate from drag polar estimate using Roskam's estimations
-L_D = 20.5;
+L_D = 12.1;
 
 %specific fuel consumption of general aviation piston engine
 cp = .4; %lb/(hp*h)
 prop_efficiency = .8;
 
 %electric cruise range calculation for battery mass sizing
-e_range = 225; %nmi, additional 25nmi added for takeoff and climb
+e_range = 200; %nmi, additional 25nmi added for takeoff and climb
 batt_efficiency = .96; %conservative estimate from slides
 
 %Justification for 400 Wh/kg batteries
 %Likely, airborne batteries will natively belong to Generation-4 solid-state since their market inception, 
 % with gravimetric energy density at cell level starting at 400 Wh/kg, 
 % and possibly achieving the 750 Wh/kg mark by 2035 (Kühnelt et al. 2023).
-eb_star = 420*3600; %500 Wh/kg from estimate converted to SI units J/kg
+eb_star = 500*3600; %500 Wh/kg from estimate converted to SI units J/kg
 
 battery_degradation = .9;
 
@@ -55,7 +55,7 @@ CLmax_clean = 1.5;
 %CLmax_to comes from NASA x-57 estimation, they got ~4.5 we can push it to
 %5
 %https://ntrs.nasa.gov/api/citations/20170005883/downloads/20170005883.pdf
-CLmax_to = 5;
+CLmax_to = 10;
 
 CLmax_climb = 3.472;
 

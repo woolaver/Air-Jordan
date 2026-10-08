@@ -18,7 +18,8 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
 
     S = W0_lbs/W_S; %ft^2
 
-    CD0_clean = f_clean/S;
+    %CD0_clean = f_clean/S;
+    CD0_clean = .015;
 
     %Roskam's assumptions on effect of flaps/landing gear (took the average
     %of each range)
@@ -80,13 +81,12 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
 
     %variables
     W_S_sweep = linspace(0, 50, 1000); %create a wing loading var to sweep over
-    rho  = 0.001640; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
+    rho  = 0.0018355; %slug/ft^3, warm day in colorado (6800 ft, 90degF)
     rho_sl = 0.002377; %slug/ft^3
     [~, ~, ~, rho_cr] = atmoscoesa((alt_cr/3.281)); %kg/m^3
     rho_cr = rho_cr/515.4; %slug/ft^3
     rho_ce = .001545; %14,000 ft, FAA regulations state that unpressurized aircraft flying above 14,000 feet for more than 30 minutes will require supplemental oxygen for flight crew
     rho_400 = 0.0016196; %7200ft, 90degF (400 ft above colorado) 
-
 
     %stall speeds
     Vstall = sqrt((2.*W_S_sweep)./(rho*CLmax_clean));
@@ -118,7 +118,6 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     P_W_cr_cor = (P_W_cr).*(Wcr_W0/Pcr_P0); %hp/lb
 
     %ceiling
-
     G = 0.001;
     V_ce = 350;
     P_W_ce = (V_ce/(550*prop_efficiency))*(G + 2*sqrt(CD0_clean*k_clean));
@@ -235,7 +234,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(W0, AR, W_S, Cf_clean, CLma
     xlabel('Wing Loading, W/S (lb/ft^2)');
     ylabel('P/W');
     title('P/W vs W/S');
-    xlim([0, 20])
+    xlim([0, 30])
     ylim([0, 1.5])
 
     % Explicitly generate the legend using the handles
