@@ -14,7 +14,7 @@ clc
 electric_system_mass = 10*32.5 + 500; %kg
 
 %L/D estimate from drag polar estimate using Roskam's estimations
-L_D = 12.1;
+L_D = 11.8746;
 
 %specific fuel consumption of general aviation piston engine
 cp = .4; %lb/(hp*h)
@@ -42,7 +42,8 @@ disp('--------------------------------------')
 %% Preliminary Sizing
 
 AR = 11;
-W_S = 10.1463; %used for CD0 estimate only, coming from design point
+%W_S = 10.1463; %used for CD0 estimate only, coming from design point
+W_S = 16;
 
 % Raymer's estimations for Cf, using twin engine small aircraft
 Cf_clean = .0045;
