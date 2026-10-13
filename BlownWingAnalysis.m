@@ -94,31 +94,6 @@ h_obs = 50; %50 foot obstacle
 g = 32.1; %ft/s^2
 t_d = 1; %sec, time before brakes applied in landing roll
 
-%{
-J_A = (rho/(2*W_S))*(CD0_g + (k1 + (G/(pi*e_g*AR))*CL_g^2) - mu_b*CL_g);
-
-s = zeros([100, 100]);
-
-for i = 1:100
-    s(i, :) = h_obs/tan(abs(gamma(i))) + t_d.*V_TD + 1/(2*g*J_A)*log(1 + ((J_A.*V_TD.^2)/mu_b));
-end
-
-% Create a line where s = 300
-figure()
-contourf(rad2deg(gamma), V_A, s, [100, 200, 300, 400, 500, 600])
-hold on
-contour(rad2deg(gamma), V_A, s, [300 300], 'r-', 'LineWidth', 2)
-xlabel('\gamma (deg)')
-ylabel('Approach speed (kts)')
-title('Landing Distance Contour')
-legend('Landing Distance', '300 feet')
-colorbar
-hold off
-%}
-
-%%
-
-
 V_TD_vec = linspace(20, 60, 100).*1.688; %ft/s sweep over landing speeds from 20-60 kts
 P_sh_vec = linspace(0, 1, 100).*P_sh; %sweep over power settings from 0-100%
 
@@ -175,7 +150,7 @@ hold off
 T0 = (2*rho*Ad)^(1/3)*(eta_a*P_sh)^(2/3); %Zero-velocity thrust
 
 W = 15000; %lbs, conservative estimate from preliminary sizing code
-m = 15000/32.1; %slugs
+m = W/32.1; %slugs
 dt = .02; %s
 V0 = 5*3.281; %ft/s, from 5m/s brake release speed from Cinar
 mu = .0165; %rolling resistance, common value used for transport aircraft
@@ -189,7 +164,7 @@ rotate = 0;
 climb = 0;
 
 %rotation quantity estimates
-CL_tail = 0; %initial CL_tail
+CL_tail = -.5; %initial CL_tail
 CL_tail_dot = .5; %random estimate
 c_bar = S/AR; %mean chord
 Iyy = 20000; %slug*ft^2, estimate from light twin engine aircraft ~ 12500 lbs
@@ -234,11 +209,12 @@ while h < 50
         L = .5*rho*V(i)^2*S*CL; %lbs
         X = .5*rho*V(i)^2*S*CX; %lbs
 
-        V_dot = (-X - W*sin(gamma(i)));
-        gamma_dot = (L - W*cos(gamma(i)));
+        V_dot = (-X - W*sin(gamma(i)))/m;
+        V(i+1) = V(i) + V_dot*dt;
+
+        gamma_dot = (L - W*cos(gamma(i)))/(m*V(i+1));
 
         gamma(i+1) = gamma(i) + gamma_dot*dt;
-        V(i+1) = V(i) + V_dot*dt;
         s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
         h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
         alpha(i+1) = alpha(i); %hold angle of attack constant
@@ -262,20 +238,22 @@ while h < 50
         V_dot = (-X - mu*(W - L))/m;
         gamma_dot = 0;
 
-        %disp(L/W)
-
         if (alpha(i) < alpha_target)
             Cm_wb = Cm_wb_0 - .015*alpha(i); %estimated from google
+
             if(CL_tail > -2)
                 CL_tail = CL_tail - CL_tail_dot*dt;
             end
 
-            Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) + CX*((z_cg - z_mlg)/c_bar) + m*V_dot*((z_cg - x_mlg)/c_bar);
+            Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) + CX*((z_cg - z_mlg)/c_bar) + m*V_dot*((z_cg - z_mlg)/c_bar);
             M_mlg = Cm_mlg*.5*rho*V(i)^2*S*c_bar;
             Iyy_mlg = Iyy + m*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
 
-            q_dot = M_mlg/Iyy_mlg
+            q_dot = M_mlg/Iyy_mlg;
             alpha(i+1) = alpha(i) + q_dot*dt;
+
+        else
+            alpha(i+1) = alpha(i); %keep alpha constant once it reaches target
         end
 
             V(i+1) = V(i) + V_dot*dt;
@@ -342,31 +320,31 @@ while h < 50
 end
 
 figure()
-plot(s, h, 'LineWidth', 1)
+plot(s, h, 'LineWidth', 1, 'Color', 'Blue')
 title('Takeoff Roll Height vs. Distance')
 ylabel('Height (ft)')
 xlabel('Distance (ft)')
 
 figure()
-plot(t, h, 'LineWidth', 1)
+plot(t, h, 'LineWidth', 1, 'Color', 'Blue')
 title('Takeoff Roll Height vs. Time')
 ylabel('Height (ft)')
 xlabel('Time (s)')
 
 figure()
-plot(t, s, 'LineWidth', 1)
+plot(t, s, 'LineWidth', 1, 'Color', 'Blue')
 title('Takeoff Roll Distance vs. Time')
 xlabel('Time (s)')
 ylabel('Distance (ft)')
 
 figure()
-plot(t, V, 'LineWidth', 1)
+plot(t, V, 'LineWidth', 1, 'Color', 'Blue')
 title('Takeoff Roll Speed vs. Time')
 ylabel('Speed (ft/s)')
 xlabel('Time (s)')
 
 figure()
-plot(t, alpha, 'LineWidth', 1)
+plot(t, alpha, 'LineWidth', 1, 'Color', 'Blue')
 title('Takeoff Roll Angle of Attack vs. Time')
 ylabel('Angle of Attack (deg)')
 xlabel('Time (s)')
