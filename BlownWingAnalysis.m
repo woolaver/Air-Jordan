@@ -149,7 +149,7 @@ hold off
 
 T0 = (2*rho*Ad)^(1/3)*(eta_a*P_sh)^(2/3); %Zero-velocity thrust
 
-W = 15000; %lbs, conservative estimate from preliminary sizing code
+W = 16928; %lbs, conservative estimate from preliminary sizing code
 m = W/32.1; %slugs
 dt = .02; %s
 V0 = 5*3.281; %ft/s, from 5m/s brake release speed from Cinar
