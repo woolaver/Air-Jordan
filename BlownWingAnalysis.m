@@ -14,7 +14,7 @@ prop_diameter = 7; %ft, just an initital guess, sized to get disk_area_ratio ~ .
 Ad = num_props*(pi*prop_diameter^2)/4;
 
 disk_area_ratio = Ad/S;
-fB = .9; %following Courtin's assumption, most likely we can actually get this higher as the width of our fuselage will be very small compared to big ass wings
+fB = .65; %following Courtin's assumption, most likely we can actually get this higher as the width of our fuselage will be very small compared to big ass wings
 
 %% Thrust and slipstream speed from shaft power
 
