@@ -42,7 +42,7 @@ disp('--------------------------------------')
 %% Preliminary Sizing
 
 AR = 11;
-%W_S = 10.1463; %used for CD0 estimate only, coming from design point
+%W_S = 16; %used for CD0 estimate only, coming from blown wing analysis
 W_S = 16;
 
 % Raymer's estimations for Cf, using twin engine small aircraft
@@ -101,6 +101,19 @@ disp("P-S design wing area: " + S_point + "ft^2");
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
+
+
+battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
+battery_volume = WeightStruct.W_batt/battery_pack_density;
+
+disp('Battery Volume (ft^3): ')
+disp(battery_volume)
+
+fuel_density = 760/16.018;% 100% Sustainable Aviation Fuel, what the RR550 turbogenerator is designed to run on, 760 kg/m^3 converted to lbs/ft^3
+fuel_volume = WeightStruct.Wf/fuel_density;
+
+disp('Fuel Volume (ft^3): ')
+disp(fuel_volume)
 
 
 %% Cost Output based on Design Points
