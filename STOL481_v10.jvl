@@ -1,0 +1,123 @@
+STOL-481 BW10x2M-noCR v10 design (sizing tool, Oct 2026) - JVL (units: ft)
+# Wing: S 33.0 m^2 (355.2 ft^2), b 18.17 m, AR 10, taper 0.6, unswept c/4 at x = 5.00 m from the nose
+# Tails: minimum T-tail from the balance check (HT 7.20 m^2, VT 5.50 m^2); sizing used 8.56 / 5.86 m^2
+# Xref = CG at 0.42 MAC (design CG range 0.35-0.48 MAC = x 17.01-17.80 ft) - NOT the 25 % MAC placeholder
+# Jet: 10 x D 1.325 m props, blown span y = 0.965-8.917 m per side; hdisk = 5*(pi D^2/4)/blown span = 2.85 ft
+
+#Mach
+0.0
+#IYsym  IZsym  Zsym
+0       0      0.0
+#Sref    Cref    Bref
+355.2   6.084   59.60
+#Xref    Yref    Zref
+17.438   0.0     0.0
+#CDp
+0.0
+#==================================================================
+SURFACE
+Wing
+#Nchord  Cspace  Nspan  Sspace
+12       1.0     40     1.0
+YDUPLICATE
+0.0
+ANGLE
+2.0
+#hdisk  fh   djet0  djet1   djet3  (djet1/djet3 as in STOL481.jvl: local sigma ~0.56 is the same)
+JETPARAM
+2.85   1.0  0.0    0.0149  -0.0000947
+#--- root
+SECTION
+#Xle     Yle      Zle      Chord   Ainc
+ 14.542    0.000   4.0000   7.449  0.0
+AFILE
+nlf0115.dat
+#--- flap inboard end (fuselage side, 0.92 m)
+SECTION
+#Xle     Yle      Zle      Chord   Ainc
+ 14.617    3.018   4.0790   7.148  0.0
+AFILE
+nlf0115.dat
+CONTROL
+flap     1.0   0.70    0 0 0    1
+JETCONTROL
+#name  gain  SgnDup
+jet    1.0   1
+JETCONTROL
+jdiff  1.0  -1
+#--- flap / flaperon break (7.72 m = 85 % b/2)
+SECTION
+#Xle     Yle      Zle      Chord   Ainc
+ 15.175   25.328   4.6632   4.917  0.0
+AFILE
+nlf0115.dat
+CONTROL
+flap     1.0   0.70    0 0 0    1
+CONTROL
+aileron  1.0   0.70    0 0 0   -1
+JETCONTROL
+#name  gain  SgnDup
+jet    1.0   1
+JETCONTROL
+jdiff  1.0  -1
+#--- flaperon outboard end (8.78 m)
+SECTION
+#Xle     Yle      Zle      Chord   Ainc
+ 15.262   28.816   4.7546   4.568  0.0
+AFILE
+nlf0115.dat
+CONTROL
+aileron  1.0   0.70    0 0 0   -1
+JETCONTROL
+#name  gain  SgnDup
+jet    1.0   1
+JETCONTROL
+jdiff  1.0  -1
+#--- tip
+SECTION
+#Xle     Yle      Zle      Chord   Ainc
+ 15.287   29.799   4.7803   4.470  0.0
+AFILE
+nlf0115.dat
+
+#==================================================================
+SURFACE
+Fin
+#Nchord  Cspace  Nspan  Sspace
+8        1.0     12     1.0
+#--- root on the tail cone
+SECTION
+ 26.564  0.0   4.000   7.808  0.0
+NACA
+0012
+CONTROL
+rudder   1.0   0.70    0 0 0    1
+#--- tip (carries the stabilizer)
+SECTION
+ 32.468  0.0  12.432   6.234  0.0
+NACA
+0012
+CONTROL
+rudder   1.0   0.70    0 0 0    1
+
+#==================================================================
+SURFACE
+Stab
+#Nchord  Cspace  Nspan  Sspace
+8        1.0     12     1.0
+YDUPLICATE
+0.0
+ANGLE
+1.0
+SECTION
+ 33.634  0.000  12.432   5.545  0.0
+NACA
+0012
+CONTROL
+elevator 1.0   0.70    0 0 0    1
+SECTION
+ 37.987   9.334  12.432   2.772  0.0
+NACA
+0012
+CONTROL
+elevator 1.0   0.70    0 0 0    1
