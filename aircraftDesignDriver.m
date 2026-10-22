@@ -21,7 +21,7 @@ cp = .4; %lb/(hp*h)
 prop_efficiency = .8;
 
 %electric cruise range calculation for battery mass sizing
-e_range = 200; %nmi, additional 25nmi added for takeoff and climb
+e_range = 225; %nmi, additional 25nmi added for takeoff and climb
 batt_efficiency = .96; %conservative estimate from slides
 
 %Justification for 400 Wh/kg batteries

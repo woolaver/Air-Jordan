@@ -1,22 +1,12 @@
 %Complete iteration loop for initial aircraft weight estimation
 
-function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration(electric_system_mass, L_D, cp, prop_efficiency, e_range, batt_efficiency, eb_star, battery_degradation)
+function [MTOW, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration_old(aircraft)
 
 g = 9.8; %m/s^2
-num_passengers = 8; %7 + 1 pilot
-passenger_mass = 86.1826; %kg
-baggage_mass = 13.6078; %kg
 
-baggage_weight = g*baggage_mass*num_passengers; %N
-passenger_weight = g*num_passengers*passenger_mass; %N
+W_payload = aircraft.payload_weight*4.44822; %lbs to N
 
-W_payload = baggage_weight + passenger_weight; %N
-
-%battery mass is estimated assuming energy density of 500 Wh/kg and 200 nmi
-%of electric cruise plus additional 100 nmi for other stages of flight
-%https://ntrs.nasa.gov/api/citations/20190000487/downloads/20190000487.pdf
-
-electric_motor_weight = g*electric_system_mass; %N
+electric_motor_weight = aircraft.electric_power_weight*4.44822; %lbs to N, includes motor weight plus generator weight
 
 %taken from MTOW of General - Comparison Aircraft google sheet
 %research_MTOW = (9.8/2.205)*[2450, 1320, 9800, 5400, 3400, 4200, 12500]; %converted lbs to N
@@ -54,14 +44,13 @@ W9_W8 = .992;
 %reserves, will assume that this flight is fully jet fuel
 
 %200 nmi fuel range from 400nmi total range - 200 nmi electric range
-R_fuel = 200;
-W5_W4 = 1/(exp(R_fuel/(325.9*(prop_efficiency/cp)*L_D)));
+W5_W4 = 1/(exp(aircraft.R_fuel/(325.9*(aircraft.prop_efficiency/aircraft.specific_fuel_consumption_cruise)*aircraft.L_D)));
 
-%range for 45 minutes of reserve fuel at 225 knots
-R_reserve = 225*.75; %nmi
-W7_W6 = 1/(exp(R_reserve/(325.9*(prop_efficiency/cp)*L_D)));
+%range for 45 minutes of reserve battery at 225 knots
+W7_W6 = 1;
 
-R_electric = e_range*1852; %nmi converted to m
+R_electric = aircraft.e_range*1852; %nmi converted to m
+R_reserve = aircraft.emergency_range*1852; %nmi converted to m
 
 tol = 10^(-5);
 delta = 1;
@@ -69,16 +58,18 @@ delta = 1;
 A = 1.4;
 C = -.10;
 
-while delta > tol
+while abs(delta) > tol
     %using Raymers's method with custom regression constants
     WE_W0 = A*W0^C + electric_motor_weight/W0;
     %assuming fuel use during takeoff and climb and fully electric cruise
     WF_W0 = 1 - (W9_W8*W8_W7*W7_W6*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0);
     m_cruise = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0*W0/g; %kg
 
-    mass_battery = (R_electric*g*m_cruise)/(batt_efficiency*eb_star*L_D*battery_degradation); %kg
+    emergency_battery_mass = (R_reserve*g*m_cruise)/(aircraft.electric_efficiency*aircraft.emergency_eb_star*aircraft.L_D*aircraft.battery_degredation); %kg
 
-    W0_new = (W_payload + mass_battery*g)/(1 - WF_W0 - WE_W0); %kg
+    mass_battery = (R_electric*g*m_cruise)/(aircraft.electric_efficiency*aircraft.eb_star*aircraft.L_D*aircraft.battery_degredation); %kg
+
+    W0_new = (W_payload + (mass_battery + emergency_battery_mass)*g)/(1 - WF_W0 - WE_W0); %kg
     delta = abs(W0_new - W0)/W0_new;
     W0 = W0_new;
 end
@@ -92,23 +83,23 @@ disp(WE_W0*W0/g * 2.205 + "lbs")
 disp('Estimated Fuel Weight:')
 disp(WF_W0*W0/g * 2.205 + "lbs")
 
-disp('Payload Weight Crew and Passenger:')
-disp(passenger_weight/g * 2.205 + "lbs")
-
-disp('Payload Weight Baggage:')
-disp(baggage_weight/g * 2.205 + "lbs")
+disp('Payload Weight:')
+disp(W_payload/g * 2.205 + "lbs")
 
 disp('Electric Propulsion - battery system weight:')
-disp((mass_battery + electric_motor_weight/g)  * 2.205 + "lbs")
+disp((electric_motor_weight/g)  * 2.205 + "lbs")
 
-disp('Total Battery Weight:')
+disp('Total Cruise Battery Weight:')
 disp(mass_battery * 2.205 + "lbs ")
+
+disp('Total Emergency Battery Weight:')
+disp(emergency_battery_mass * 2.205 + " lbs")
 
 disp('Landing Weight Fraction:')
 Wl_W0 = (W9_W8*W8_W7*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0);
 disp(Wl_W0)
 
-MTOW = W0 * 2.205;
+MTOW = W0/g * 2.205;
 Wcr_W0 = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0 ;
 Wclimb_W0 = W3_W2*W2_W1*W1_W0;
 Wce_W0 = W4_W3*W3_W2*W2_W1*W1_W0;
