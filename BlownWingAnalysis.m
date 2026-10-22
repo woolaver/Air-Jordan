@@ -3,7 +3,6 @@ function BlownWingAnalysis(aircraft)
     % Higher fidelity analysis of blown wing takeoff and landing parameters
     % Using geometric estimates when needed, will be commented when used
     
-    
     %% Initial Wing and Propeller Layout
     
     AR = aircraft.AR; %From aircraftDesignDriver

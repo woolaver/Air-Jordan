@@ -82,7 +82,11 @@ aircraft.l_tail = 30; %ft, estimated from beechcraft baron
 aircraft.z_cg = 10; %ft, estimated from beechcraft baron
 aircraft.z_mlg = 0; %ft, main landing gear on the ground
 
-BlownWingAnalysis(aircraft)
+%BlownWingAnalysis(aircraft)
+
+W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
+
+max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep)
 
 
 %% Updated Weight Estimate and P-S Curves
