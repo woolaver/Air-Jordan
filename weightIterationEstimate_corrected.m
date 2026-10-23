@@ -9,7 +9,7 @@ function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, et
 %         Now: WE = A*W0^(1+C) + dW_wing + dW_tail + motors + battery, where
 %         dW_wing = rhoWing*(S_exp - S_exp,ref) and dW_tail = rhoTail*(S_tails - S_tails,ref)
 %         are the extra (or saved) structure relative to a reference wing at
-%         p.WS_ref (typical twin wing loading). Tails follow from volume coefficients,
+%         aircraft.WS_ref (typical twin wing loading). Tails follow from volume coefficients,
 %         so a bigger wing also brings bigger tails.
 %  FIX B  "W0 = Nan" -> NaN (MATLAB is case sensitive; the old line threw an error
 %         instead of flagging a non-converged design).
@@ -44,9 +44,9 @@ function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, et
         W_batt = work_J/(eta*elec.eta_batt*e_battery*elec.degradation)*2.20462;
 
         % FIX A: area-dependent structure relative to the statistical reference wing
-        S_ref   = W0/p.WS_ref;
-        dW_wing = p.rhoWing*p.f_exposed*(S - S_ref);
-        dW_tail = p.rhoTail*(tail_area(S, p) - tail_area(S_ref, p));
+        S_ref   = W0/aircraft.WS_ref;
+        dW_wing = aircraft.rhoWing*aircraft.f_exposed*(S - S_ref);
+        dW_tail = aircraft.rhoTail*(tail_area(S, p) - tail_area(S_ref, p));
 
         WE    = A*W0^(1+C) + dW_wing + dW_tail + W_elec_motor + W_batt;
         WE_W0 = WE/W0;
@@ -68,19 +68,19 @@ end
 
 function [St, Sh, Sv] = tail_area(S, p)
 % tail areas from volume coefficients at fixed tail arms (ft^2)
-    b = sqrt(p.AR*S); c = S/b;
-    Sh = p.cHT*c*S/p.l_ht;
-    Sv = p.cVT*b*S/p.l_vt;
+    b = sqrt(aircraft.AR*S); c = S/b;
+    Sh = aircraft.cHT*c*S/aircraft.l_ht;
+    Sv = aircraft.cVT*b*S/aircraft.l_vt;
     St = Sh + Sv;
     if nargout == 2, St = Sh; Sh = Sv; end      % [Sh, Sv] = tail_area(S,p)
 end
 
-function p = defaults(p)
+function aircraft = defaults(aircraft)
     d = struct('AR',11,'rhoWing',2.5,'rhoTail',2.0,'f_exposed',0.90,'WS_ref',26, ...
         'cHT',0.90,'cVT',0.06,'l_ht',30.8,'l_vt',23.3,'eb_Whkg',[],'R_el_nmi',[]);
     f = fieldnames(d);
     for i = 1:numel(f)
-        if ~isfield(p,f{i}), p.(f{i}) = d.(f{i}); end
+        if ~isfield(aircraft,f{i}), aircraft.(f{i}) = d.(f{i}); end
     end
 end
 
@@ -93,6 +93,6 @@ function elec = hybrid_data(p)
     elec.degradation      = 0.9;
     elec.eta_batt         = 0.90;
     elec.c_sl             = 0.3;
-    if ~isempty(p.eb_Whkg),  elec.eb_Whkg = p.eb_Whkg; end      % FIX C
-    if ~isempty(p.R_el_nmi), elec.R = p.R_el_nmi; end
+    if ~isempty(aircraft.eb_Whkg),  elec.eb_Whkg = aircraft.eb_Whkg; end      % FIX C
+    if ~isempty(aircraft.R_el_nmi), elec.R = aircraft.R_el_nmi; end
 end

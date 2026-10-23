@@ -7,6 +7,37 @@ clear
 clc
 close all
 
+% RFP Values
+% ---------- RFP given values -----------------
+aircraft.n_pax       = 8;        % [-]      passengers, from RFP
+aircraft.R           = 400;      % [nmi]    design range, from RFP
+aircraft.then_year   = 2035;     % [yr]     entry into service
+
+% ----------- Logistics -------------
+aircraft.tb          = 3;        % [hr]     block time
+aircraft.PLF         = 0.75;     % [-]      passenger load factor
+aircraft.R_p         = 1.0;      % [-]      ratio of pax legs (Roskam IOC term)
+aircraft.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
+aircraft.ticket_price = 200;     % [$]      average one-way fare on the target route
+
+% ---------- Fuel / Oil Specific (per trip) ----------
+aircraft.P_f         = 2.24;     % [$/gal]  Jet-A price (then-year $)
+aircraft.rho_f       = 6.7;      % [lb/gal] Jet-A density
+aircraft.oil_frac    = 0.01;     % [-]      oil consumed as a fraction of block fuel
+aircraft.P_oil       = 46;       % [$/gal]  oil price based on current data
+aircraft.rho_oil     = 3.7;      % [lb/gal] density of aircraft lubricant oil
+
+% ---------- Crew & Maintenance ----------
+aircraft.AF          = 1.0;      % [-]      crew airline factor (1.0 = high estimate)
+aircraft.R_L         = 150;      % [$/hr]   maintenance labour rate
+aircraft.H_em        = 4000;     % [hr]     hours between engine overhaul/swap
+
+% ---------- ownership ----------
+aircraft.n_life      = 20;       % [yr]     depreciation period
+aircraft.K_dep       = 0.10;     % [-]      residual value fraction
+aircraft.IR_a        = 0.02;     % [1/yr]   hull insurance rate 
+aircraft.f_financing = 0.07;     % [-]      financing as a fraction of DOC
+
 %% Main Assumptions:
 
 %Initial weight properties
@@ -91,22 +122,25 @@ max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep)
 
 %% Updated Weight Estimate and P-S Curves
 
-design_margin = 1.025;
+aircraft.design_margin = 1.025;
+aircraft.Cf_clean = 0.0045;
+aircraft.CLmax_clean = 1.5;
+aircraft.CLMax_to = 5;
+aircraft.CLmax_climb = 3.472;
 
-p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
-    'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
-    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr, 'design_margin', design_margin);
 
 S_sweep = 500:10:4000;
 
-[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
+[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
 
-[W0_design, WeightStruct] = weightIterationEstimate_new(P_point, W0, S_point, W_S_point, prop_efficiency);
+[W0_design, WeightStruct] = weightIterationEstimate_corrected(P_point, W0, S_point, W_S_point, prop_efficiency);
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
+
+aircraft.W_oil       = 0.0125 *WeightStruct.W_f * aircraft.tb / 100; % [lbs] weight of oil 
 
 
 battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
@@ -125,4 +159,4 @@ disp(fuel_volume)
 
 %% Cost Estimate
 
-
+[c] = aircraftcost(aircraft);
