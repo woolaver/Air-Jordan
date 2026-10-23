@@ -40,10 +40,11 @@ function t = tailSizing(S, AR, taper, x_wing_c4, x_ht_c4, x_vt_c4, opt)
     t.cr_vt = 2*t.S_vt/(t.h_vt*(1 + opt.taper_v));  t.ct_vt = opt.taper_v*t.cr_vt;
     t.l_h = l_h; t.l_v = l_v; t.mac = mac; t.b = b;
     t.Sh_S = t.S_ht/S; t.Sv_S = t.S_vt/S;
-
+    %{
     fprintf('Wing S %.0f ft^2, b %.1f ft, MAC %.2f ft | arms l_h %.1f ft, l_v %.1f ft\n', S, b, mac, l_h, l_v);
     fprintf('HT %.0f ft^2 (%.1f m^2, %.0f %% of S): span %.1f ft, root/tip %.2f/%.2f ft\n', ...
         t.S_ht, t.S_ht*0.092903, 100*t.Sh_S, t.b_ht, t.cr_ht, t.ct_ht);
     fprintf('VT %.0f ft^2 (%.1f m^2, %.0f %% of S): height %.1f ft, root/tip %.2f/%.2f ft\n', ...
         t.S_vt, t.S_vt*0.092903, 100*t.Sv_S, t.h_vt, t.cr_vt, t.ct_vt);
+    %}
 end

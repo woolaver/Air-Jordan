@@ -156,7 +156,8 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     %maneuver
     phi = deg2rad(60);
     n = 1/cos(phi);
-    P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q_cr*pi*aircraft.AR*e_clean));
+    P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_sweep ...
+        + W_S_sweep.*(n^2/(q_cr*pi*aircraft.AR*e_clean)));
     P_W_man_cor = P_W_man .* (aircraft.Wcr_W0 / aircraft.Pcr_P0);
 
     %Design point will be at intersection of landing and takeoff curve with

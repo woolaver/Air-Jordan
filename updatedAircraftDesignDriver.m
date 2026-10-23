@@ -52,7 +52,7 @@ aircraft.battery_degredation = .9; %assuing battery replacement at 90% of batter
 aircraft.alt_cr = 12500; %feet
 aircraft.num_propeller = 10; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
-aircraft.payload_weight = 1519; %lbs from Data Sheet
+aircraft.payload_weight = 1760; %lbs from Data Sheet
 aircraft.specific_fuel_consumption_cruise = .412*1.64399; %lb/(hp*h) converted from kg/(kW*h) from turbogenerator analysis in report 5
 aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
@@ -120,40 +120,42 @@ W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
 
 
-%% Updated Weight Estimate and P-S Curves
+% Updated Weight Estimate and P-S Curves
 
+% Initial Weight Estimation 
+aircraft.W0    = W0;              % [kg] as returned by the first-pass estimator
+aircraft.W0_lb = W0*2.20462;      % [lb] use wherever a lb value is needed
+
+% Blown wing
+aircraft.c_bar = sqrt(aircraft.S/aircraft.AR);        % ft, mean chord = S/b
+W_S_sweep = linspace(0.5, 50, 100);
+
+% Updated Weight Estimate and P-S Curves
 aircraft.design_margin = 1.025;
 aircraft.Cf_clean = 0.0045;
-aircraft.CLmax_clean = 1.5;
-aircraft.CLMax_to = 5;
+aircraft.CLmax_clean = 1.5;          
 aircraft.CLmax_climb = 3.472;
 
+aircraft.n_engines      = 7;      % [-]
+aircraft.f_motor_power  = 1.0;    % [-]
+aircraft.C_motor_per_hp = 150;    % [$/hp]
+aircraft.C_batt_kWh     = 520;    % [$/kWh]
+aircraft.DoD = 0.85;  aircraft.eta_chg = 0.92;  aircraft.P_elec = 0.15;
 
-S_sweep = 500:10:4000;
+S_sweep = 100:10:3000;
 
-[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft);
+% Run P-S Constraint Section
+[P_point, S_point, ps] = PS_constraintcurves(S_sweep, aircraft.W0_lb, W_S_point, aircraft);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
-
+% Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    P_point, W0, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+    P_point, aircraft.W0_lb, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
 
-aircraft.W_oil = 0.0125 * WeightStruct.Wf * aircraft.tb / 100;   % was W_f
+aircraft = set_sizing_results(aircraft, P_point, W0_design, WeightStruct);
 
-aircraft.MTOW       = W0_design;                      % [lb]
-aircraft.SHP_to     = P_point;                        % [hp]
-aircraft.n_engines  = 7;                              % [-] (your call: 6 electric + 1 combustion?)
-aircraft.W_f        = WeightStruct.Wf;                % [lb]
-aircraft.W_b        = WeightStruct.W_batt;            % [lb]
-aircraft.E_batt     = aircraft.W_b*0.45359237*(aircraft.eb_star/3600)/1000;  % [kWh]
-aircraft.f_motor_power  = 1.0;
-aircraft.P_motor_hp     = aircraft.f_motor_power*P_point;
-aircraft.C_motor_per_hp = 150;                        % [$/hp]
-aircraft.C_batt_kWh     = 520;                        % [$/kWh]
-aircraft.DoD = 0.85;  aircraft.eta_chg = 0.92;  aircraft.P_elec = 0.15;
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
-
 
 battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
 battery_volume = WeightStruct.W_batt/battery_pack_density;
