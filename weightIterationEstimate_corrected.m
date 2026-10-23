@@ -65,7 +65,7 @@ function aircraft = defaults(aircraft)
 end
 
 function elec = hybrid_data(aircraft)
-    elec.Hp               = 0.8;                            % hybrid power split
+    elec.Hp               = aircraft.Hp;                            % hybrid power split
     elec.motor_power_each = 188;                            % hp per motor
     elec.w_motor_each     = 33;                             % lb
     elec.R                = aircraft.e_range;               % nmi electric cruise

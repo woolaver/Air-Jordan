@@ -60,6 +60,16 @@ aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
 aircraft.V_cr = 225; %kts, from RFP
 aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
 
+
+% Emergency Range Assumptions
+aircraft.h_field    = 0;         % [ft] field elevation (rho_takeoff is sea-level ISA+18F)
+aircraft.h_fail_agl = 5000;      % [ft] AGL at failure
+aircraft.dT_K       = 18*5/9;    % [K]  ISA+18 F is a 10 K difference
+aircraft.rho_em     = density_isa_offset(aircraft.h_field + aircraft.h_fail_agl, aircraft.dT_K);
+aircraft.Wem_W0     = 1.0;       % [-]  weight at failure / MTOW
+aircraft.G_em       = 0.0;       % [-]  gradient margin (0 = level flight)
+aircraft.Hp         = 0.8;       % [-]  battery-fed share of installed P (the split hybrid_data hard-coded)
+
 %% Initial Weight Estimation
 
 [W0, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration_old(aircraft);
@@ -142,6 +152,8 @@ aircraft.C_motor_per_hp = 150;    % [$/hp]
 aircraft.C_batt_kWh     = 520;    % [$/kWh]
 aircraft.DoD = 0.85;  aircraft.eta_chg = 0.92;  aircraft.P_elec = 0.15;
 
+
+
 S_sweep = 100:10:3000;
 
 % Run P-S Constraint Section
@@ -153,6 +165,7 @@ disp("P-S design wing area: " + S_point + "ft^2");
     P_point, aircraft.W0_lb, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
 
 aircraft = set_sizing_results(aircraft, P_point, W0_design, WeightStruct);
+em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);

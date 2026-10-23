@@ -129,21 +129,22 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     Pce_P0 = (rho_ce/rho_sl)^0.8;
     P_W_ce_cor = ones([1, 1000]).*(P_W_ce)*(aircraft.Wce_W0/Pce_P0);
 
-    function P_W_climb_cor = climb(G,CLmax,ks,prop_efficiency,Wclimb_W0, rho_clm,rho_sl, L_D_clm)
-        CL = CLmax/ks^2;
-        P_W_climb = ((sqrt(W_S_sweep)*(G + (L_D_clm)^-1))/(18.97*prop_efficiency*(rho_clm/rho_sl)*(sqrt(CL))));
-        P_W_climb_cor = (Wclimb_W0^(2/3))*P_W_climb;
+    function P_W_climb_cor = climb(G,CLmax,ks,eta,Wclimb_W0,rho_clm,rho_sl,CD0_cfg,k)
+        CL_op = CLmax/ks^2;                    % renamed: nested functions share the parent's variables,
+        L_D   = CL_op/(CD0_cfg + k*CL_op^2);   % and the parent already has a CL vector
+        P_W_climb = sqrt(W_S_sweep)*(G + 1/L_D)/(18.97*eta*sqrt(rho_clm/rho_sl)*sqrt(CL_op));
+        P_W_climb_cor = Wclimb_W0^(3/2)*P_W_climb;
     end
 
     %takeoff climb (denver hot day)
     G_to_clm = .04;
     ks = 1.2;
-    P_W_to_clm = climb(G_to_clm, aircraft.CLmax_to, ks, aircraft.prop_efficiency, aircraft.Wclimb_W0, aircraft.rho_takeoff, rho_sl, L_D_to_gear);
+    P_W_to_clm = climb(G_to_clm, aircraft.CLmax_to, ks,      aircraft.prop_efficiency, aircraft.Wclimb_W0, aircraft.rho_takeoff, rho_sl, CD0_takeoff_gear, k_takeoff);   
    
     %critical loss of thrust
     G_crit = 0.01;
     ks_crit = 1.2;
-    P_W_crit = climb(G_crit, aircraft.CLmax_to, ks_crit, aircraft.prop_efficiency, aircraft.Wclimb_W0, rho_400, rho_sl, L_D_to_gear);
+    P_W_crit   = climb(G_crit,   aircraft.CLmax_to, ks_crit, aircraft.prop_efficiency, aircraft.Wclimb_W0, rho_400,              rho_sl, CD0_takeoff_gear, k_takeoff);
     P_W_crit_cor = (aircraft.num_propeller/(aircraft.num_propeller-3))*P_W_crit;
 
     %balked landing configuration
@@ -151,14 +152,22 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     %balked landing 
     G_land = 0.03;
     ks_land = 1.3;
-    P_W_balked = climb(G_land, CLmax_land, ks_land, aircraft.prop_efficiency, aircraft.Wland_W0, aircraft.rho_takeoff, rho_sl, L_D_land_gear);
+    P_W_balked = climb(G_land, CLmax_land, ks_land, aircraft.prop_efficiency, aircraft.Wland_W0,  aircraft.rho_takeoff, rho_sl, CD0_landing_gear, k_landing);
 
     %maneuver
     phi = deg2rad(60);
     n = 1/cos(phi);
-    P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_sweep ...
-        + W_S_sweep.*(n^2/(q_cr*pi*aircraft.AR*e_clean)));
-    P_W_man_cor = P_W_man .* (aircraft.Wcr_W0 / aircraft.Pcr_P0);
+    W_S_man = W_S_sweep.*aircraft.Wcr_W0;
+    P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_man ...
+        + W_S_man.*(n^2/(q_cr*pi*aircraft.AR*e_clean)));
+    P_W_man_cor = P_W_man.*(aircraft.Wcr_W0/aircraft.Pcr_P0);
+
+    %emergency: turbogenerator failure, battery only, level flight at best-range speed
+    W_S_em = W_S_sweep.*aircraft.Wem_W0;                              % lb/ft^2 at failure weight
+    CL_br  = sqrt(aircraft.CD0_clean/k_clean);                        % CL at max L/D
+    V_br   = sqrt(2.*W_S_em./(aircraft.rho_em*CL_br));                % ft/s
+    P_W_em = aircraft.Wem_W0.*(V_br./(550*aircraft.prop_efficiency)) ...
+        .*(aircraft.G_em + 2*sqrt(aircraft.CD0_clean*k_clean))./aircraft.Hp;   % hp per lb of W0
 
     %Design point will be at intersection of landing and takeoff curve with
     %additional margin
@@ -185,6 +194,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     h(7) = plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'cyan', 'DisplayName', 'Balked Landing Climb');
     h(8) = plot(W_S_sweep, P_W_man_cor, 'LineWidth', 1.5, 'Color', [0.7290, 0.1, 0.9250], 'DisplayName', 'Maneuver'); %orange
     h(9) = plot(W_S_point, P_W_point, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
+    h(10) = plot(W_S_sweep, P_W_em, 'LineWidth', 1.5, 'Color', [0.4 0.4 0.4], 'DisplayName', 'Battery-Only Emergency');
     
     %--- Feasible design space shading -----------------------------------
     % Feasible region: to the LEFT of the Landing line (W/S_land_cor) and

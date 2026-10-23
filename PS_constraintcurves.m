@@ -2,7 +2,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
 
     require_fields(aircraft, {'AR','Cf_clean','CLmax_to','Wcr_W0','Wce_W0','Wclimb_W0', ...
         'Wland_W0','Pcr_P0','prop_efficiency','alt_cr','V_cr','rho_takeoff', ...
-        'num_propeller','design_margin'}, mfilename);
+        'num_propeller','design_margin', 'rho_em', 'Wem_W0', 'G_em', 'Hp'}, mfilename);
     
     W0_guess = aircraft.W0_lb;                   
     S_point  = W0_guess / W_S_point;       
@@ -25,7 +25,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
     env.WS_land = (env.sland/80)*(env.rho/env.rho_sl)*aircraft.CLmax_to/aircraft.Wland_W0;
     
     
-    names = {'Takeoff', 'Cruise', 'Ceiling', 'Takeoff Climb', 'Critical Loss of Thrust', 'Balked Landing Climb', 'Maneuever'};
+    names = {'Takeoff', 'Cruise', 'Ceiling', 'Takeoff Climb', 'Critical Loss of Thrust', 'Balked Landing Climb', 'Maneuever', 'Emergency Range'};
 
     nC = numel(names);
     nS = numel(S_sweep);
@@ -181,9 +181,10 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     h_pt = plot(S_discrete, P_avail_hp, 'kp', 'MarkerSize', 14, ...
         'MarkerFaceColor', 'y', 'MarkerEdgeColor', 'k', 'LineWidth', 1.5, ...
         'DisplayName', sprintf('Final Design Point (S=%.0f ft^2, P=%.0f hp)', S_discrete, P_avail_hp));
-    legend([h(1:nC), h(nC+1), h_cost, h_rated, h_avail, h_pt], 'Location', 'northeastoutside');
-    hold off;
+    
     %}
+    legend([h(1:nC), h(nC+1), h_cost, h_rated, h_avail], 'Location', 'northeastoutside');
+    hold off;
  
 end
 
@@ -218,11 +219,8 @@ function pw = pw_all(W0, S, aircraft, env)
     k_to    = 1/(pi*0.725*aircraft.AR);
     k_land  = 1/(pi*0.725*aircraft.AR);
     
-    CLm = aircraft.CLmax_to;
-    LD_to   = CLm/((CD0 + .065 + .02) + k_to  *CLm^2);
-    LD_land = CLm/((CD0 + .065 + .02) + k_land*CLm^2);
     
-    pw = zeros(1,7);
+    pw = zeros(1,8);
     pw(1) = WS/(env.TOP*(env.rho/env.rho_sl)*aircraft.CLmax_to);                       % takeoff
     
     WS_cr = WS*aircraft.Wcr_W0;                                                        % cruise
@@ -230,20 +228,26 @@ function pw = pw_all(W0, S, aircraft, env)
         *(aircraft.Wcr_W0/aircraft.Pcr_P0);
     
     Pce_P0 = (env.rho_ce/env.rho_sl)^0.8;                                       % ceiling
-    pw(3) = (350/(550*eta))*(0.001 + 2*sqrt(CD0*k_clean))*(aircraft.Wce_W0/Pce_P0);
+    WS_ce = WS*aircraft.Wce_W0;
+    V_ce  = sqrt(2*WS_ce/(env.rho_ce*sqrt(CD0/k_clean)));     % best-L/D speed at ceiling [ft/s]
+    pw(3) = (V_ce/(550*eta))*(0.001 + 2*sqrt(CD0*k_clean))*(aircraft.Wce_W0/Pce_P0);
     
-    pw(4) = climb_pw(0.04, aircraft.CLmax_to, 1.2, eta, aircraft.Wclimb_W0, env.rho,     env.rho_sl, LD_to,   WS);
+    CD0_cfg = CD0 + .065 + .02;     % takeoff/landing flaps + gear
+    pw(4) = climb_pw(0.04, aircraft.CLmax_to, 1.2, eta, aircraft.Wclimb_W0, env.rho,     env.rho_sl, CD0_cfg, k_to,   WS);
     pw(5) = aircraft.num_propeller/(aircraft.num_propeller-3)* ...
-        climb_pw(0.01, aircraft.CLmax_to, 1.2, eta, aircraft.Wclimb_W0, env.rho_400, env.rho_sl, LD_to, WS);
-    pw(6) = climb_pw(0.03, 5.0,        1.3, eta, aircraft.Wland_W0,  env.rho,     env.rho_sl, LD_land, WS);
+        climb_pw(0.01, aircraft.CLmax_to, 1.2, eta, aircraft.Wclimb_W0, env.rho_400, env.rho_sl, CD0_cfg, k_to,   WS);
+    pw(6) = climb_pw(0.03, 5.0,               1.3, eta, aircraft.Wland_W0,  env.rho,     env.rho_sl, CD0_cfg, k_land, WS);
     
     n = 1/cos(deg2rad(60));                                                     % maneuver
-    pw(7) = (env.V_cr/(550*eta))*(env.q_cr*CD0/WS + WS*n^2*k_clean/env.q_cr) ...
+    pw(7) = (env.V_cr/(550*eta))*(env.q_cr*CD0/WS_cr + WS_cr*n^2*k_clean/env.q_cr) ...
         *(aircraft.Wcr_W0/aircraft.Pcr_P0);
+    CL_br = sqrt(CD0/k_clean);
+    V_br  = sqrt(2*WS*aircraft.Wem_W0/(aircraft.rho_em*CL_br));        % ft/s
+    pw(8) = aircraft.Wem_W0*(V_br/(550*eta))*(aircraft.G_em + 2*sqrt(CD0*k_clean))/aircraft.Hp;
     end
     
-    function pw = climb_pw(G, CLmax, ks, eta, Wfrac, rho_c, rho_sl, LD, WS)
-        CL = CLmax/ks^2;
-        pw = (Wfrac^(2/3))*sqrt(WS)*(G + 1/LD)/(18.97*eta*(rho_c/rho_sl)*sqrt(CL));
+function pw = climb_pw(G, CLmax, ks, eta, Wfrac, rho_c, rho_sl, CD0_cfg, k, WS)
+    CL = CLmax/ks^2;                       % CL actually flown at V = ks*Vstall
+    LD = CL/(CD0_cfg + k*CL^2);            % L/D at that CL
+    pw = Wfrac^(3/2)*sqrt(WS)*(G + 1/LD)/(18.97*eta*sqrt(rho_c/rho_sl)*sqrt(CL));
 end
-
