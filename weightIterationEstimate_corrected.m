@@ -1,4 +1,4 @@
-function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, eta, p)
+function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, eta, aircraft)
 % Corrected version of weightIterationEstimate_new.m
 %
 % CHANGES (search "FIX"):
@@ -22,9 +22,9 @@ function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, et
 %   rhoWing 2.5 lb/ft^2 exposed planform, rhoTail 2.0 lb/ft^2 (Table 15.2, GA column)
 %   WS_ref 26 lb/ft^2 = typical twin-engine GA wing loading (Table 5.5)
 
-    if nargin < 6, p = struct(); end
-    p = defaults(p);
-    elec = hybrid_data(p);
+    if nargin < 6, aircraft = struct(); end
+    aircraft = defaults(aircraft);
+    elec = hybrid_data(aircraft);
 
     tol = 1e-5; maxit = 200;
     A = 1.4; C = -0.10;                       % Raymer GA twin
@@ -37,7 +37,7 @@ function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, et
     e_battery = elec.eb_Whkg*3600;
 
     for i = 1:maxit
-        [Wf, Wf_W0, L_D] = fuel_fraction_calc(P, W0, S, elec.c_sl, eta);
+        [Wf, Wf_W0, L_D] = fuel_fraction_calc(aircraft);
 
         W_ec   = W0*(1 - Wf_W0);
         work_J = (W_ec*R_ft/L_D)*1.35582;
@@ -46,7 +46,7 @@ function [W0, out] = weightIterationEstimate_corrected(P, W0, S, WdivSDesign, et
         % FIX A: area-dependent structure relative to the statistical reference wing
         S_ref   = W0/aircraft.WS_ref;
         dW_wing = aircraft.rhoWing*aircraft.f_exposed*(S - S_ref);
-        dW_tail = aircraft.rhoTail*(tail_area(S, p) - tail_area(S_ref, p));
+        dW_tail = aircraft.rhoTail*(tail_area(S, aircraft) - tail_area(S_ref, aircraft));
 
         WE    = A*W0^(1+C) + dW_wing + dW_tail + W_elec_motor + W_batt;
         WE_W0 = WE/W0;
@@ -77,14 +77,15 @@ end
 
 function aircraft = defaults(aircraft)
     d = struct('AR',11,'rhoWing',2.5,'rhoTail',2.0,'f_exposed',0.90,'WS_ref',26, ...
-        'cHT',0.90,'cVT',0.06,'l_ht',30.8,'l_vt',23.3,'eb_Whkg',[],'R_el_nmi',[]);
+    'cHT',0.90,'cVT',0.06,'l_ht',30.8,'l_vt',23.3, ...
+    'eb_star',[],'e_range',[]);  
     f = fieldnames(d);
     for i = 1:numel(f)
         if ~isfield(aircraft,f{i}), aircraft.(f{i}) = d.(f{i}); end
     end
 end
 
-function elec = hybrid_data(p)
+function elec = hybrid_data(aircraft)
     elec.Hp               = 0.8;     % hybrid power split
     elec.motor_power_each = 188;     % hp per motor
     elec.w_motor_each     = 33;      % lb
@@ -93,6 +94,6 @@ function elec = hybrid_data(p)
     elec.degradation      = 0.9;
     elec.eta_batt         = 0.90;
     elec.c_sl             = 0.3;
-    if ~isempty(aircraft.eb_Whkg),  elec.eb_Whkg = aircraft.eb_Whkg; end      % FIX C
-    if ~isempty(aircraft.R_el_nmi), elec.R = aircraft.R_el_nmi; end
+    if ~isempty(aircraft.eb_star),  elec.eb_Whkg = aircraft.eb_star/3600; end      % FIX C
+    if ~isempty(aircraft.e_range),  elec.R = aircraft.e_range; end
 end

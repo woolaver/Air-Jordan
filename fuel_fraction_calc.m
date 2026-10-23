@@ -12,30 +12,24 @@
          % eta - propeller efficiency
 
 
-function [Wf, Wf_W0, L_D] = fuel_fraction_calc(P, W0, S, c_sl, eta)
+function [Wf, Wf_W0, L_D] = fuel_fraction_calc(aircraft)
 
-    AR = 11;
-    e = 0.825;
-    k = 1 / (pi * e * AR);
     
-    W1_W0 = 1 - c_sl * (15 / 60) * (0.05 * P / W0);    
+    W1_W0 = 1 - aircraft.specific_fuel_consumption_cruise * (15 / 60) * (0.05 * aircraft.P / aircraft.W0);    
     W1 = W1_W0 * W0;
-    W2_W1 = 1 - c_sl * (1 / 60) * (P / W1);
+    W2_W1 = 1 - aircraft.specific_fuel_consumption_cruise * (1 / 60) * (P / W1);
     W3_W2 = 0.996; % historical value from Roskam
     
     % Cruise Aerodynamics
-    S_wet_rest = 2500; % ft^2, will update with fuselage / empenage design
-    Cf = 0.0045; % historical guess value - will update with airfoil design
-    CD0 = Cf * (S_wet_rest + 2*S) / S;
-    CL = sqrt(CD0 / k);
-    L_D = (0.94 * CL) / (CD0 + k*CL^2);
+  
+    L_D = aircraft.LD;
 
     
     % Parameters for cruise segment
     R = 200 * 6076; % cruise distance in feet
-    c_sl_ft = c_sl / (550 * 3600); % units 1 / ft
+    c_sl_ft = aircraft.specific_fuel_consumption_cruise / (550 * 3600); % units 1 / ft
 
-    W4_W3 = exp(-R * c_sl_ft / (eta * L_D)); % cruise segment
+    W4_W3 = exp(-R * c_sl_ft / (aircraft.prop_efficiency * L_D)); % cruise segment
 
     % Descent and Landing
     W5_W4 = 0.992;  % historical value

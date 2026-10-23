@@ -117,7 +117,7 @@ aircraft.z_mlg = 0; %ft, main landing gear on the ground
 
 W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
-max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep)
+max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
 
 
 %% Updated Weight Estimate and P-S Curves
@@ -135,12 +135,24 @@ S_sweep = 500:10:4000;
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
 
-[W0_design, WeightStruct] = weightIterationEstimate_corrected(P_point, W0, S_point, W_S_point, prop_efficiency);
+[W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
+    P_point, W0, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
 
+aircraft.W_oil = 0.0125 * WeightStruct.Wf * aircraft.tb / 100;   % was W_f
+
+aircraft.MTOW       = W0_design;                      % [lb]
+aircraft.SHP_to     = P_point;                        % [hp]
+aircraft.n_engines  = 7;                              % [-] (your call: 6 electric + 1 combustion?)
+aircraft.W_f        = WeightStruct.Wf;                % [lb]
+aircraft.W_b        = WeightStruct.W_batt;            % [lb]
+aircraft.E_batt     = aircraft.W_b*0.45359237*(aircraft.eb_star/3600)/1000;  % [kWh]
+aircraft.f_motor_power  = 1.0;
+aircraft.P_motor_hp     = aircraft.f_motor_power*P_point;
+aircraft.C_motor_per_hp = 150;                        % [$/hp]
+aircraft.C_batt_kWh     = 520;                        % [$/kWh]
+aircraft.DoD = 0.85;  aircraft.eta_chg = 0.92;  aircraft.P_elec = 0.15;
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
-
-aircraft.W_oil       = 0.0125 *WeightStruct.W_f * aircraft.tb / 100; % [lbs] weight of oil 
 
 
 battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3

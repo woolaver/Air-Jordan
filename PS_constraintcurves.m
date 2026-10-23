@@ -1,4 +1,4 @@
-function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, p)
+function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft)
 
 
     S_point = W0 / W_S_point;
