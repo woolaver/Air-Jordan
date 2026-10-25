@@ -83,7 +83,7 @@ aircraft.z_cg = 10; %ft, estimated from beechcraft baron
 aircraft.z_mlg = 0; %ft, main landing gear on the ground
 aircraft.CL_max_stall = 10; %from blown wing analysis 
 
-BlownWingAnalysis(aircraft)
+%BlownWingAnalysis(aircraft)
 
 %W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
@@ -108,7 +108,6 @@ disp("P-S design wing area: " + S_point + "ft^2");
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
-
 
 battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
 battery_volume = WeightStruct.W_batt/battery_pack_density;

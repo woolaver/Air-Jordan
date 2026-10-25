@@ -1,71 +1,71 @@
 %% aircraft_cost.m
 
-function [c] = aircraftcost(p)
+function [c] = aircraftcost(aircraft)
  
     
     %% ---------------------------------------------------
     
-    function CEF = cost_escalation_factor(b_year, p)
-        % Escalates base-year dollars to p.then_year.
+    function CEF = cost_escalation_factor(b_year, aircraft)
+        % Escalates base-year dollars to aircraft.then_year.
         bcef = 5.17053 + 0.104981*(b_year     - 2006);
-        tcef = 5.17053 + 0.104981*(p.then_year - 2006);
+        tcef = 5.17053 + 0.104981*(aircraft.then_year - 2006);
         CEF  = tcef / bcef;
     end
     
     %% --------------------------------------------------- 
      
-    function [C_aircraft, C_airframe, C_engines, C_engine_each, a] = roskam_price(p)
+    function [C_aircraft, C_airframe, C_engines, C_engine_each, a] = roskam_price(aircraft)
         % Roskam turboprop commuter price equations, 1989 base, 6,000-50,000 lb.
-        CEF = cost_escalation_factor(1989, p);
+        CEF = cost_escalation_factor(1989, aircraft);
          
-        C_aircraft_rosk = 10^(1.1846 + 1.2625*log10(p.MTOW)) * CEF;
-        C_engines = 10^(2.5262 + 0.9465*log10(p.SHP_to)) * CEF;
+        C_aircraft_rosk = 10^(1.1846 + 1.2625*log10(aircraft.MTOW)) * CEF;
+        C_engines = 10^(2.5262 + 0.9465*log10(aircraft.SHP_to)) * CEF;
         C_airframe = C_aircraft_rosk - C_engines;
-        C_engine_each = C_engines / max(p.n_engines, 1);
-        C_motors = p.C_motor_per_hp  * p.P_motor_hp;
-        C_batteries = p.C_batt_kWh  * p.E_batt;     
+        C_engine_each = C_engines / max(aircraft.n_engines, 1);
+        C_motors = aircraft.C_motor_per_hp  * aircraft.P_motor_hp;
+        C_batteries = aircraft.C_batt_kWh  * aircraft.E_batt;     
         C_aircraft = C_airframe + C_engines + C_motors + C_batteries;
         
         % save values in struct for table later
         a.C_airframe = C_aircraft_rosk - C_engines;
-        a.C_engine_each = C_engines / max(p.n_engines, 1);
-        a.C_motors = p.C_motor_per_hp  * p.P_motor_hp;
-        a.C_batteries = p.C_batt_kWh  * p.E_batt;     
+        a.C_engine_each = C_engines / max(aircraft.n_engines, 1);
+        a.C_motors = aircraft.C_motor_per_hp  * aircraft.P_motor_hp;
+        a.C_batteries = aircraft.C_batt_kWh  * aircraft.E_batt;     
         a.C_aircraft = C_airframe + C_engines + C_motors + C_batteries;
     end
     
     %% ---------------------------------------------------
      
     % run roskam_price function
-    [C_aircraft, C_airframe, C_engines, C_engine_each, a] = roskam_price(p);
+    [C_aircraft, C_airframe, C_engines, C_engine_each, a] = roskam_price(aircraft);
      
     %% ---------------------------------------------------
     
-    function [COC, c] = cash_operating(p, C_airframe, C_engine_each)
+    function [COC, c] = cash_operating(aircraft, C_airframe, C_engine_each)
         % Per-trip cash operating cost. Acquisition cost is NOT included here --
         % it enters through depreciation and insurance in fixed_operating().
-        CEF89 = cost_escalation_factor(1989, p);
-        CEF99 = cost_escalation_factor(1999, p);
+        CEF89 = cost_escalation_factor(1989, aircraft);
+        CEF99 = cost_escalation_factor(1999, aircraft);
          
-        c.crew = p.AF * (p.K_route * p.MTOW^0.4 * p.tb) * CEF99;
+        c.crew = aircraft.AF * (aircraft.K_route * aircraft.MTOW^0.4 * aircraft.tb) * CEF99;
          
-        c.fuel = 1.02 * p.W_f   * p.P_f   / p.rho_f;
-        c.oil  = 1.02 * p.W_oil * p.P_oil / p.rho_oil;
-        c.elec = 1.05 * p.W_b * p.P_elec;
+        c.fuel = 1.02 * aircraft.W_f   * aircraft.P_f   / aircraft.rho_f;
+        c.oil  = 1.02 * aircraft.W_oil * aircraft.P_oil / aircraft.rho_oil;
+        c.elec = 1.05 * aircraft.W_b * aircraft.P_elec;
          
-        c.airport = 1.5 * (p.MTOW/1000) * CEF99;
-        c.nav     = 0.5 * CEF89 * (1.852*p.R/p.tb) * sqrt((0.00045359237*p.MTOW)/50);
+        c.airport = 1.5 * (aircraft.MTOW/1000) * CEF99;
+        c.nav     = 0.5 * CEF89 * (1.852*aircraft.R/aircraft.tb) * sqrt((0.00045359237*aircraft.MTOW)/50);
          
         % airframe maintenance ($/block hr -> $/trip)
-        C_MLA     = 1.03 * (3 + 0.067*C_airframe/1000) * p.R_L;
+        C_MLA     = 1.03 * (3 + 0.067*C_airframe/1000) * aircraft.R_L;
         C_MMA     = 1.03 * (30*CEF89 + 0.79e-5 * C_airframe);
-        c.maint_af = (C_MLA + C_MMA) * p.tb;
+        c.maint_af = (C_MLA + C_MMA) * aircraft.tb;
          
         % engine maintenance ($/block hr per engine -> $/trip, all engines)
-        shp_each   = p.SHP_to / max(p.n_engines, 1);
-        C_MLE      = 1.03 * 1.3 * (0.4956 + 0.0532*(shp_each/1000)*(1100/p.H_em) + 0.1) * p.R_L;
+        shp_each   = aircraft.SHP_to / max(aircraft.n_engines, 1);
+        C_MLE      = 1.03 * 1.3 * (0.4956 + 0.0532*(shp_each/1000)*(1100/aircraft.H_em) + 0.1) * aircraft.R_L;
         C_MME      = 1.03 * (30*CEF89 + 0.79e-5 * C_engine_each);   % placeholder form
-        c.maint_eng = p.n_engines * (C_MLE + C_MME) * p.tb;
+        c.maint_eng = aircraft.n_engines * (C_MLE + C_MME) * aircraft.tb;
          
         COC = c.crew + c.fuel + c.oil + c.elec + c.airport + c.nav + ...
               c.maint_af + c.maint_eng;
@@ -74,23 +74,23 @@ function [c] = aircraftcost(p)
     %% ---------------------------------------------------
     
     % run cash operating function
-    [COC, c] = cash_operating(p, C_airframe, C_engine_each);
+    [COC, c] = cash_operating(aircraft, C_airframe, C_engine_each);
     
     %% ---------------------------------------------------
      
-    function [FOC, DOC, f] = fixed_operating(p, C_aircraft, COC)
+    function [FOC, DOC, f] = fixed_operating(aircraft, C_aircraft, COC)
         % Per-trip ownership cost. Financing and registration are fractions of DOC,
         % and DOC contains them, so solve in closed form:
         %   DOC = (COC + dep + ins) / (1 - f_fin - k_reg)
-        f.U_annual = 1.5e3 * (3.4546*p.tb + 2.994 - ...
-                     (12.289*p.tb^2 - 5.6626*p.tb + 8.964)^0.5);   % [block hr/yr]
+        f.U_annual = 1.5e3 * (3.4546*aircraft.tb + 2.994 - ...
+                     (12.289*aircraft.tb^2 - 5.6626*aircraft.tb + 8.964)^0.5);   % [block hr/yr]
          
-        f.dep = C_aircraft * (1 - p.K_dep) * p.tb / (p.n_life * f.U_annual);
-        f.ins = (p.IR_a * C_aircraft / f.U_annual) * p.tb;
+        f.dep = C_aircraft * (1 - aircraft.K_dep) * aircraft.tb / (aircraft.n_life * f.U_annual);
+        f.ins = (aircraft.IR_a * C_aircraft / f.U_annual) * aircraft.tb;
          
-        k_reg = 0.001 + 1e-8 * p.MTOW;
-        DOC   = (COC + f.dep + f.ins) / (1 - p.f_financing - k_reg);
-        f.fin = p.f_financing * DOC;
+        k_reg = 0.001 + 1e-8 * aircraft.MTOW;
+        DOC   = (COC + f.dep + f.ins) / (1 - aircraft.f_financing - k_reg);
+        f.fin = aircraft.f_financing * DOC;
         f.reg = k_reg   * DOC;
          
         FOC = f.dep + f.ins + f.fin + f.reg;
@@ -99,19 +99,19 @@ function [c] = aircraftcost(p)
     %% ---------------------------------------------------
     
     % run fixed operating cost code
-    [FOC, DOC, f] = fixed_operating(p, C_aircraft, COC);
+    [FOC, DOC, f] = fixed_operating(aircraft, C_aircraft, COC);
     
     %% ---------------------------------------------------
      
-    function [IOC, i] = indirect_operating(p)
+    function [IOC, i] = indirect_operating(aircraft)
         % Per-trip indirect operating cost, 2001 base.
-        CEF = cost_escalation_factor(2001, p);
-        n = p.n_pax; PLF = p.PLF; tb = p.tb; R = p.R;
+        CEF = cost_escalation_factor(2001, aircraft);
+        n = aircraft.n_pax; PLF = aircraft.PLF; tb = aircraft.tb; R = aircraft.R;
          
-        C_f = p.ticket_price / R;          % [$/pax-nmi] yield
+        C_f = aircraft.ticket_price / R;          % [$/pax-nmi] yield
          
         i.serv    = (0.285 + 0.0025) * (n/tb) * CEF;
-        i.food    = 1.05 * (2.42*(n/(1+p.R_p)) + (n*p.R_p)/(1+p.R_p)) * CEF;
+        i.food    = 1.05 * (2.42*(n/(1+aircraft.R_p)) + (n*aircraft.R_p)/(1+aircraft.R_p)) * CEF;
         i.ent     = 196/tb * CEF;
         i.pax_ins = 0.52 * (n*PLF*R/(1000*tb)) * CEF;
          
@@ -132,7 +132,7 @@ function [c] = aircraftcost(p)
     %% ---------------------------------------------------
     
     % run indirect operating cost function
-    [IOC, i] = indirect_operating(p);
+    [IOC, i] = indirect_operating(aircraft);
     
     %% ---------------------------------------------------
     
@@ -166,6 +166,9 @@ function [c] = aircraftcost(p)
     c.T0 = struct_to_table(a, 'Aircraft Cost', C_aircraft);
     c.tot_cost = C_aircraft + IOC + DOC + FOC;
 
-
+    % scalar outputs for plotting / sweeps 
+    c.COC = COC;  c.FOC = FOC;  c.DOC = DOC;  c.IOC = IOC;
+    c.C_aircraft = C_aircraft;
+    c.tot_cost = C_aircraft + IOC + DOC + FOC;
 
 end
