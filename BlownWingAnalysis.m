@@ -7,7 +7,7 @@ function BlownWingAnalysis(aircraft)
     
     AR = aircraft.AR; %From aircraftDesignDriver
     num_props = aircraft.num_propeller; 
-    S = 1058; %ft^2 from updated P-S plot
+    S = aircraft.S; %ft^2 from updated P-S plot
     prop_diameter = aircraft.prop_diameter; %ft, just an initital guess, sized to get disk_area_ratio ~ .35
     Ad = num_props*(pi*prop_diameter^2)/4;
     
@@ -73,6 +73,7 @@ function BlownWingAnalysis(aircraft)
     title('Powered Lift Curve')
     
     %% Landing Approach and Distance
+    
     
     CD0 = .015 + .065 + .02;
     
@@ -142,6 +143,7 @@ function BlownWingAnalysis(aircraft)
     legend('Landing Distance', 'Allowed Angle of Attack', '300 ft landing')
     colorbar
     hold off
+    
 
     %% Integrate Takeoff 
     
@@ -183,6 +185,9 @@ function BlownWingAnalysis(aircraft)
     V = V0;
     CL_vec = 0;
     alpha = 3; %deg
+    gamma = deg2rad(0);
+
+    V_stall = sqrt(2*W/(rho*S*aircraft.CL_max_stall));
     
     %explicit euler method to time march
     %assuming no mass loss during takeoff, fuel loss is pretty negligible
@@ -202,13 +207,21 @@ function BlownWingAnalysis(aircraft)
             F_0 = CL_u;
             
             CL = CL_u + F_Cj - F_0;
+            if(CL > aircraft.CL_max_stall)
+                CL = aircraft.CL_max_stall;
+            end
             CX = CD0 + CL^2/(pi*e*AR + 2*delta_C_j) - T_c_prime;
     
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
     
             V_dot = (-X - W*sin(gamma(i)))/m;
-            V(i+1) = V(i) + V_dot*dt;
+
+            if(V(i) <= V_stall*1.2)
+                V(i+1) = V(i) + V_dot*dt;
+            else
+                V(i+1) = V(i);
+            end
     
             gamma_dot = (L - W*cos(gamma(i)))/(m*V(i+1));
     
@@ -229,7 +242,12 @@ function BlownWingAnalysis(aircraft)
             F_0 = CL_u;
             
             CL = CL_u + F_Cj - F_0;
+            if(CL > aircraft.CL_max_stall)
+                CL = aircraft.CL_max_stall;
+            end
+
             CX = CD0 + CL^2/(pi*e*AR + 2*delta_C_j) - T_c_prime;
+
     
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
@@ -255,15 +273,15 @@ function BlownWingAnalysis(aircraft)
                 alpha(i+1) = alpha(i); %keep alpha constant once it reaches target
             end
     
-                V(i+1) = V(i) + V_dot*dt;
+                %V(i+1) = V(i) + V_dot*dt;
+                V(i+1) = V(i);
                 s(i+1) = s(i) + V(i+1)*dt;
                 gamma(i+1) = gamma(i) + gamma_dot*dt;
                 %no change in height during rotation
                 h(i+1) = h(i);
                 CL_vec(i+1) = CL;
     
-                if (L >= W)
-                    alpha(i+1) = alpha_target;
+                if (alpha(i+1) >= alpha_target)
                     rotate = 0;
                     climb = 1;
                 end
@@ -279,6 +297,11 @@ function BlownWingAnalysis(aircraft)
             F_0 = CL_u;
             
             CL = CL_u + F_Cj - F_0;
+
+            if(CL > aircraft.CL_max_stall)
+                CL = aircraft.CL_max_stall;
+            end
+
             L = .5*rho*V(i)^2*S*CL; %lbs
     
             %estimate CX
@@ -306,10 +329,18 @@ function BlownWingAnalysis(aircraft)
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL_potential = CL_u + F_Cj - F_0;
+            %CL_potential = CL_u + F_Cj - F_0;
     
-            L_potential = .5*rho*V(i+1)^2*S*CL_potential;
-            if (L_potential >= W)
+            %L_potential = .5*rho*V(i+1)^2*S*CL_potential;
+
+            
+            %if (L_potential >= W)
+               % roll = 0;
+              %  rotate = 1;
+             %   alpha_target = alpha_stall - 8 - 4; %deg
+            %end
+
+            if (V(i+1) >= V_stall*1.2)
                 roll = 0;
                 rotate = 1;
                 alpha_target = alpha_stall - 8 - 4; %deg
@@ -319,9 +350,6 @@ function BlownWingAnalysis(aircraft)
         t(i+1) = t(i) + dt;
         i = i+1;
     end
-
-    disp(t)
-    disp(CL_vec)
     
     figure()
     plot(s, h, 'LineWidth', 1, 'Color', 'Blue')
@@ -346,6 +374,12 @@ function BlownWingAnalysis(aircraft)
     title('Takeoff Roll Speed vs. Time')
     ylabel('Speed (ft/s)')
     xlabel('Time (s)')
+
+    figure()
+    plot(t, rad2deg(gamma), 'LineWidth', 1, 'Color', 'Blue')
+    title('Takeoff Roll Flight Path Angle vs. Time')
+    ylabel('Flight Path Angle (deg)')
+    xlabel('Time (s)')
     
     figure()
     plot(t, alpha, 'LineWidth', 1, 'Color', 'Blue')
@@ -356,6 +390,12 @@ function BlownWingAnalysis(aircraft)
     figure()
     plot(t, CL_vec, 'LineWidth', 1', 'Color', 'Blue')
     title('Takeoff Roll CL vs. Time')
+    ylabel('CL')
+    xlabel('Time (s)')
+
+    figure()
+    plot(V, CL_vec, 'LineWidth', 1, 'Color', 'Blue')
+    title('Takeoff Roll CL vs. Speed')
     ylabel('CL')
     xlabel('Time (s)')
 end

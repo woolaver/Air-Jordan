@@ -103,16 +103,14 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
         P_W_to(i) = (W_S_sweep(i))/(TOP_23_sol*sigma*aircraft.CLmax_to);
     end
     
-    %{
+    
     %landing field length
     SF_land = 0.75; %est
     sland = 300*SF_land;
     %assume sa term is zero for FAR 23 (land in 300ft)
     W_S_land = (sland/80)*((aircraft.rho_takeoff/rho_sl)*aircraft.CLmax_to);
     W_S_land_cor = W_S_land/aircraft.Wland_W0;
-    %}
-
-    
+        
 
     %cruise
     V_cr = aircraft.V_cr*1.688; %ft/s

@@ -18,7 +18,7 @@ aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
 aircraft.eb_star = 505*3600; %505 Wh/kg converted to SI units J/kg
 aircraft.battery_degredation = .9; %assuing battery replacement at 90% of battery max charge
-aircraft.alt_cr = 12500; %feet
+aircraft.alt_cr = 10000; %feet
 aircraft.num_propeller = 10; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
 aircraft.payload_weight = 1519; %lbs from Data Sheet
@@ -55,7 +55,7 @@ design_margin = .025; % 2.5% margin on P/W, W/S design point
 %% Blown Wing Analysis
 
 %Blown wing analysis properties
-aircraft.prop_diameter = 7; %ft, initial estimate from blown wing analysis
+aircraft.prop_diameter = 5.5; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
@@ -69,10 +69,10 @@ aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
 aircraft.mu = .0165; %rolling resistance estimate, used for transport aircraft
 aircraft.CL_tail = -.5; %initial CL_tail
-aircraft.CL_tail_dot = .5; %random estimate
+aircraft.CL_tail_dot = .05; %random estimate
 aircraft.Iyy = 20000; %slug*ft^2, estimate from light twin engine aircraft ~ 12500 lbs
 aircraft.Cm_wb_0 = .05; %estimate from google
-aircraft.S = 1065; % from updated sizing plot
+aircraft.S = 650; % from updated sizing plot
 aircraft.c_bar = aircraft.S/aircraft.AR;
 aircraft.x_mlg = .65*aircraft.c_bar; %estimate from Cinar
 aircraft.x_cg = .35*aircraft.c_bar; %estimate from Cinar
@@ -81,12 +81,13 @@ aircraft.Sh = .4*aircraft.S; %estimated 40% sizing of tail
 aircraft.l_tail = 30; %ft, estimated from beechcraft baron
 aircraft.z_cg = 10; %ft, estimated from beechcraft baron
 aircraft.z_mlg = 0; %ft, main landing gear on the ground
+aircraft.CL_max_stall = 10; %from blown wing analysis 
 
-%BlownWingAnalysis(aircraft)
+BlownWingAnalysis(aircraft)
 
-W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
+%W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
-max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep)
+%max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
 
 
 %% Updated Weight Estimate and P-S Curves
