@@ -72,6 +72,14 @@ function BlownWingAnalysis(aircraft)
     legend('Lift Curve Slope', 'Max CL')
     title('Powered Lift Curve')
 
+    %% Unblown CLmax from AVL (CLtot at alpha = 0 and 10 deg, body axis)
+    i_w = 2;                          % deg, wing incidence in AVL model
+    alpha_stall_u = 16 - i_w;         % deg (body); Courtin alpha_stall at T'c = 0
+    CLavl = @(CL0, CL10) CL0 + (CL10 - CL0)/10*alpha_stall_u;
+    CL_max_clean_unblown = CLavl(0.3772,  1.20569);   % 0 deg flap
+    CL_max_TO_unblown    = CLavl(1.14806, 1.92767);   % 20 deg flap
+    CL_max_land_unblown  = CLavl(2.71537, 3.36805);   % 60 deg flap
+
      %% Landing Configuration Max CL
 
     V_stall_flaps = 50; %ft/s, initial estimate
