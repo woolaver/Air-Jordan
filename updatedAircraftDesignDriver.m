@@ -13,7 +13,7 @@ close all
 aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data Sheet (not including batteries)
 aircraft.L_D = 11.8746; %From aircraftDesignDriver, comes from force balance at cruise
 aircraft.AR = 11; %From aircraftDesignDriver
-aircraft.W_S = 16; %lbs/ft, main restriction is landing from blown wing analysis
+aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
 aircraft.eb_star = 505*3600; %505 Wh/kg converted to SI units J/kg
@@ -55,6 +55,7 @@ design_margin = .025; % 2.5% margin on P/W, W/S design point
 %% Blown Wing Analysis
 
 %Blown wing analysis properties
+aircraft.W0 = 14389; %lbs
 aircraft.prop_diameter = 5.5; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
@@ -83,7 +84,7 @@ aircraft.z_cg = 10; %ft, estimated from beechcraft baron
 aircraft.z_mlg = 0; %ft, main landing gear on the ground
 aircraft.CL_max_stall = 10; %from blown wing analysis 
 
-%BlownWingAnalysis(aircraft)
+BlownWingAnalysis(aircraft)
 
 %W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
@@ -94,9 +95,9 @@ aircraft.CL_max_stall = 10; %from blown wing analysis
 
 design_margin = 1.025;
 
-p = struct('AR',AR,'Cf_clean',Cf_clean,'CLmax_to',CLmax_to, ...
-    'prop_efficiency',prop_efficiency,'Wcr_W0',Wcr_W0,'Wclimb_W0',Wclimb_W0, ...
-    'Wce_W0',Wce_W0,'Wland_W0',Wland_W0,'Pcr_P0',Pcr_P0,'Neng',Neng,'alt_cr',alt_cr, 'design_margin', design_margin);
+p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CLmax_to, ...
+    'prop_efficiency', aircraft.prop_efficiency,'Wcr_W0', aircraft.Wcr_W0,'Wclimb_W0', aircraft.Wclimb_W0, ...
+    'Wce_W0',aircraft.Wce_W0,'Wland_W0',aircraft.Wland_W0,'Pcr_P0',aircraft.Pcr_P0,'Neng',aircraft.num_propeller,'alt_cr',aircraft.alt_cr, 'design_margin', aircraft.design_margin);
 
 S_sweep = 500:10:4000;
 
@@ -123,6 +124,13 @@ disp(fuel_volume)
 
 
 
-%% Cost Estimate
 
+%% Cost Output based on Design Points
 
+[c] = aircraftcost(aircraft_data_01);
+
+disp("Total Cost = $" + c.tot_cost );
+disp("COC", c.T1);
+disp("FOC", c.T2);
+disp("IOC", c.T3);
+disp("Aircraft Cost", c.T0);
