@@ -193,8 +193,8 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     h(6) = plot(W_S_sweep, P_W_crit_cor, 'LineWidth', 1.5, 'Color', [0.85 0.7 0], 'DisplayName', 'Critical Loss of Thrust'); % Darker yellow for visibility
     h(7) = plot(W_S_sweep, P_W_balked, 'LineWidth', 1.5, 'Color', 'cyan', 'DisplayName', 'Balked Landing Climb');
     h(8) = plot(W_S_sweep, P_W_man_cor, 'LineWidth', 1.5, 'Color', [0.7290, 0.1, 0.9250], 'DisplayName', 'Maneuver'); %orange
-    h(9) = plot(W_S_point, P_W_point, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
-    h(10) = plot(W_S_sweep, P_W_em, 'LineWidth', 1.5, 'Color', [0.4 0.4 0.4], 'DisplayName', 'Battery-Only Emergency');
+    h(9) = plot(W_S_sweep, P_W_em, 'LineWidth', 1.5, 'Color', [0.4 0.4 0.4], 'DisplayName', 'Battery-Only Emergency');
+    h(10) = plot(21.2, 0.122, 'r.', 'MarkerSize', 20, 'DisplayName', 'Design Point');
     
     %--- Feasible design space shading -----------------------------------
     % Feasible region: to the LEFT of the Landing line (W/S_land_cor) and
@@ -211,33 +211,35 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     % and drop any non-finite samples (e.g. the W/S = 0 cruise point,
     % which divides by zero and evaluates to Inf).
     mask = W_S_sweep <= W_S_land_cor;
-    x_all = W_S_sweep(mask);
+    x_all  = W_S_sweep(mask);
     man_all = P_W_man_cor(mask);
-    cr_all = P_W_cr_cor(mask);
-    finiteIdx = isfinite(man_all) & isfinite(cr_all);
+    cr_all  = P_W_cr_cor(mask);
+    to_all  = P_W_to(mask);
+
+    finiteIdx = isfinite(man_all) & isfinite(cr_all) & isfinite(to_all);
     x_shade = x_all(finiteIdx);
-    y_lower = max(man_all(finiteIdx), cr_all(finiteIdx)); % envelope of Manuever & Cruise
- 
+    y_lower = max([man_all(finiteIdx); cr_all(finiteIdx); to_all(finiteIdx)], [], 1);  % envelope of all three
+
     if numel(x_shade) >= 2
-        % Add an exact point right at the landing boundary so the patch
-        % edge lines up precisely with the vertical Landing line
+        % exact point at the landing boundary
         y_man_at_land = interp1(x_shade, man_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
-        y_cr_at_land = interp1(x_shade, cr_all(finiteIdx), W_S_land_cor, 'linear', 'extrap');
-        y_lower_at_land = max(y_man_at_land, y_cr_at_land);
- 
+        y_cr_at_land  = interp1(x_shade, cr_all(finiteIdx),  W_S_land_cor, 'linear', 'extrap');
+        y_to_at_land  = interp1(x_shade, to_all(finiteIdx),  W_S_land_cor, 'linear', 'extrap');
+        y_lower_at_land = max([y_man_at_land, y_cr_at_land, y_to_at_land]);
+
         x_shade = [x_shade, W_S_land_cor];
         y_lower = [y_lower, y_lower_at_land];
         [x_shade, sortIdx] = sort(x_shade);
         y_lower = y_lower(sortIdx);
- 
-        % Clip the lower envelope so it never pokes above the patch top
+
         y_lower = min(y_lower, y_top);
- 
+
         patch_x = [x_shade, fliplr(x_shade)];
         patch_y = [repmat(y_top, 1, numel(x_shade)), fliplr(y_lower)];
- 
-        h_shade = fill(patch_x, patch_y, [0.6 0.85 0.6], 'FaceAlpha', 0.35, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-        uistack(h_shade, 'bottom'); % draw behind the constraint lines
+
+        h_shade = fill(patch_x, patch_y, [0.6 0.85 0.6], 'FaceAlpha', 0.35, ...
+            'EdgeColor', 'none', 'HandleVisibility', 'off');
+        uistack(h_shade, 'bottom');
     end
     ylim(yl); % fill() can auto-expand the axes; restore the original limits
     %----------------------------------------------------------------------
@@ -251,7 +253,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     ylabel('P/W');
     title('P/W vs W/S');
     xlim([0, 30])
-    ylim([0, 1.5])
+    ylim([0, 0.4])
 
     % Explicitly generate the legend using the handles
     legend(h, 'Location', 'Northeast');
@@ -261,7 +263,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     %Takeoff T/W correction factor
     T_W_to_cor = (1/.8)*(1/.94)*aircraft.Wto_W0*(aircraft.num_propeller/(aircraft.num_propeller-3));
     disp("Takeoff Thrust Correction: " + T_W_to_cor)
-
+    %{
     %stall, takeoff, and landing speeds
     disp("Stall Speed: " + Vstall(P_W_man_index)/1.688 + " kts")
     disp("Landing Speed: " + Vstall(P_W_man_index)*ks_land/1.688 + " kts")
@@ -270,7 +272,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
 
     disp("Takeoff Rate of Climb: " + Vstall(P_W_man_index)*ks_land*G_to_clm*60 + "ft/min")
     disp("OEI Rate of Climb: " + Vstall(P_W_man_index)*ks_land*G_crit*60 + "ft/min")
-
+    %}
     %calculate CL_cruise from wing loading
     CL_cruise = W_S_point/q_cr;
 

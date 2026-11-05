@@ -162,7 +162,9 @@ disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    P_point, aircraft.W0_lb, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+    1765, aircraft.W0_lb, 649, W_S_point, aircraft.prop_efficiency, aircraft);
+
+
 
 aircraft = set_sizing_results(aircraft, P_point, W0_design, WeightStruct);
 em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);

@@ -145,7 +145,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
 
     %% Aircraft cost meshgrid over plot - objective function
     S_mesh = linspace(min(S_sweep), max(S_sweep), 40);
-    P_mesh = linspace(200, 3000, 40);          % start above 0: price eq. uses log10(SHP)
+    P_mesh = linspace(0, 3200, 40);          % start above 0: price eq. uses log10(SHP)
     [Smesh, Pmesh] = meshgrid(S_mesh, P_mesh);
     Cmesh = nan(size(Smesh));
     N_motors = aircraft.num_propeller;
