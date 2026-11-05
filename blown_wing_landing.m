@@ -4,7 +4,7 @@ function max_W_S_possible = blown_wing_landing(aircraft, W_S_sweep)
     
     % Landing Approach and Distance
     
-    CD0 = aircraft.CD0_clean + .065 + .02;
+    CD0 = .015 + .065 + .02;
         
     CL_g = 1; %Courtin's EL-2 ground value
     CD0_g = aircraft.CD0_g; %Courtin's EL-2 ground value
@@ -24,8 +24,8 @@ function max_W_S_possible = blown_wing_landing(aircraft, W_S_sweep)
     g = 32.1; %ft/s^2
     t_d = 1; %sec, time before brakes applied in landing roll
     
-    V_TD_vec = linspace(20, 60, 100).*1.688; %ft/s sweep over landing speeds from 20-60 kts
-    P_sh_vec = linspace(0, 1, 100).*aircraft.max_power; %sweep over power settings from 0-100%
+    V_TD_vec = linspace(20, 60, 10).*1.688; %ft/s sweep over landing speeds from 20-60 kts
+    P_sh_vec = linspace(0, 1, 10).*aircraft.max_power; %sweep over power settings from 0-100%
     
     e = aircraft.e_land; %estimated oswald efficiency factor
     
@@ -33,6 +33,9 @@ function max_W_S_possible = blown_wing_landing(aircraft, W_S_sweep)
     alpha_stall = zeros([length(V_TD_vec), length(P_sh_vec)]);
     landingDistance = zeros([length(V_TD_vec), length(P_sh_vec)]);
     gamma_vec = zeros([length(V_TD_vec), length(P_sh_vec)]);
+    is_possible_alpha = zeros([length(V_TD_vec), length(P_sh_vec)]);
+
+    delta_alpha = 10;
 
     feasibleLanding = zeros(size(W_S_sweep));
 
@@ -41,7 +44,7 @@ function max_W_S_possible = blown_wing_landing(aircraft, W_S_sweep)
         S = aircraft.W0/W_S_sweep(m);
         disk_area_ratio = Ad/S;
         for i = 1:length(V_TD_vec)
-            for j = length(P_sh_vec)
+            for j = 1:length(P_sh_vec)
                 [delta_C_j, delta_j, T_c_prime] = calc_Tc(V_TD_vec(i), eta_a, rho, P_sh_vec(j), Ad, disk_area_ratio, delta_F, eta_F);
                 q_inf = .5*rho*V_TD_vec(i)^2;
         
@@ -64,11 +67,10 @@ function max_W_S_possible = blown_wing_landing(aircraft, W_S_sweep)
                 J_A = (rho/(2*W_S_sweep(m)))*(CD0_g + (k1 + (G/(pi*e_g*AR))*CL_k^2) - mu_b*CL_k);
                 landingDistance(i, j) = h_obs/tan(abs(gamma)) + t_d*V_TD_vec(i) + 1/(2*g*J_A)*log(1 + ((J_A*V_TD_vec(i)^2)/mu_b));
 
-                if ((landingDistance(i, j) <= 300) && (alpha(i, j) < alpha_stall(i, j)))
-                    feasibleLanding(m) = 1;
-                end
+                is_possible_alpha(i, j) = alpha(i,j) <= (alpha_stall(i,j) - delta_alpha);
             end
         end
+        feasibleLanding(m) = any(landingDistance(:) <= 300 & any(imag(landingDistance(:)) ~= 0) & is_possible_alpha(:));
     end
 
     disp(feasibleLanding)

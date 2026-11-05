@@ -7,68 +7,27 @@ clear
 clc
 close all
 
-% RFP Values
-% ---------- RFP given values -----------------
-aircraft.n_pax       = 8;        % [-]      passengers, from RFP
-aircraft.R           = 400;      % [nmi]    design range, from RFP
-aircraft.then_year   = 2035;     % [yr]     entry into service
-
-% ----------- Logistics -------------
-aircraft.tb          = 3;        % [hr]     block time
-aircraft.PLF         = 0.75;     % [-]      passenger load factor
-aircraft.R_p         = 1.0;      % [-]      ratio of pax legs (Roskam IOC term)
-aircraft.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
-aircraft.ticket_price = 200;     % [$]      average one-way fare on the target route
-
-% ---------- Fuel / Oil Specific (per trip) ----------
-aircraft.P_f         = 2.24;     % [$/gal]  Jet-A price (then-year $)
-aircraft.rho_f       = 6.7;      % [lb/gal] Jet-A density
-aircraft.oil_frac    = 0.01;     % [-]      oil consumed as a fraction of block fuel
-aircraft.P_oil       = 46;       % [$/gal]  oil price based on current data
-aircraft.rho_oil     = 3.7;      % [lb/gal] density of aircraft lubricant oil
-
-% ---------- Crew & Maintenance ----------
-aircraft.AF          = 1.0;      % [-]      crew airline factor (1.0 = high estimate)
-aircraft.R_L         = 150;      % [$/hr]   maintenance labour rate
-aircraft.H_em        = 4000;     % [hr]     hours between engine overhaul/swap
-
-% ---------- ownership ----------
-aircraft.n_life      = 20;       % [yr]     depreciation period
-aircraft.K_dep       = 0.10;     % [-]      residual value fraction
-aircraft.IR_a        = 0.02;     % [1/yr]   hull insurance rate 
-aircraft.f_financing = 0.07;     % [-]      financing as a fraction of DOC
-
 %% Main Assumptions:
 
 %Initial weight properties
 aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data Sheet (not including batteries)
 aircraft.L_D = 11.8746; %From aircraftDesignDriver, comes from force balance at cruise
 aircraft.AR = 11; %From aircraftDesignDriver
-aircraft.W_S = 16; %lbs/ft, main restriction is landing from blown wing analysis
+aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
 aircraft.eb_star = 505*3600; %505 Wh/kg converted to SI units J/kg
 aircraft.battery_degredation = .9; %assuing battery replacement at 90% of battery max charge
-aircraft.alt_cr = 12500; %feet
+aircraft.alt_cr = 10000; %feet
 aircraft.num_propeller = 10; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
-aircraft.payload_weight = 1760; %lbs from Data Sheet
+aircraft.payload_weight = 1519; %lbs from Data Sheet
 aircraft.specific_fuel_consumption_cruise = .412*1.64399; %lb/(hp*h) converted from kg/(kW*h) from turbogenerator analysis in report 5
 aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
 aircraft.V_cr = 225; %kts, from RFP
 aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
-
-
-% Emergency Range Assumptions
-aircraft.h_field    = 0;         % [ft] field elevation (rho_takeoff is sea-level ISA+18F)
-aircraft.h_fail_agl = 5000;      % [ft] AGL at failure
-aircraft.dT_K       = 18*5/9;    % [K]  ISA+18 F is a 10 K difference
-aircraft.rho_em     = density_isa_offset(aircraft.h_field + aircraft.h_fail_agl, aircraft.dT_K);
-aircraft.Wem_W0     = 1.0;       % [-]  weight at failure / MTOW
-aircraft.G_em       = 0.0;       % [-]  gradient margin (0 = level flight)
-aircraft.Hp         = 0.8;       % [-]  battery-fed share of installed P (the split hybrid_data hard-coded)
 
 %% Initial Weight Estimation
 
@@ -96,7 +55,8 @@ design_margin = .025; % 2.5% margin on P/W, W/S design point
 %% Blown Wing Analysis
 
 %Blown wing analysis properties
-aircraft.prop_diameter = 7; %ft, initial estimate from blown wing analysis
+aircraft.W0 = 14389; %lbs
+aircraft.prop_diameter = 5.5; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
@@ -110,10 +70,10 @@ aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
 aircraft.mu = .0165; %rolling resistance estimate, used for transport aircraft
 aircraft.CL_tail = -.5; %initial CL_tail
-aircraft.CL_tail_dot = .5; %random estimate
+aircraft.CL_tail_dot = .05; %random estimate
 aircraft.Iyy = 20000; %slug*ft^2, estimate from light twin engine aircraft ~ 12500 lbs
 aircraft.Cm_wb_0 = .05; %estimate from google
-aircraft.S = 1065; % from updated sizing plot
+aircraft.S = 650; % from updated sizing plot
 aircraft.c_bar = aircraft.S/aircraft.AR;
 aircraft.x_mlg = .65*aircraft.c_bar; %estimate from Cinar
 aircraft.x_cg = .35*aircraft.c_bar; %estimate from Cinar
@@ -122,52 +82,34 @@ aircraft.Sh = .4*aircraft.S; %estimated 40% sizing of tail
 aircraft.l_tail = 30; %ft, estimated from beechcraft baron
 aircraft.z_cg = 10; %ft, estimated from beechcraft baron
 aircraft.z_mlg = 0; %ft, main landing gear on the ground
+aircraft.CL_max_stall = 10; %from blown wing analysis 
 
-%BlownWingAnalysis(aircraft)
+BlownWingAnalysis(aircraft)
 
-W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
+%W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
-max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
-
-
-% Updated Weight Estimate and P-S Curves
-
-% Initial Weight Estimation 
-aircraft.W0    = W0;              % [kg] as returned by the first-pass estimator
-aircraft.W0_lb = W0*2.20462;      % [lb] use wherever a lb value is needed
-
-% Blown wing
-aircraft.c_bar = sqrt(aircraft.S/aircraft.AR);        % ft, mean chord = S/b
-W_S_sweep = linspace(0.5, 50, 100);
-
-% Updated Weight Estimate and P-S Curves
-aircraft.design_margin = 1.025;
-aircraft.Cf_clean = 0.0045;
-aircraft.CLmax_clean = 1.5;          
-aircraft.CLmax_climb = 3.472;
-
-aircraft.n_engines      = 7;      % [-]
-aircraft.f_motor_power  = 1.0;    % [-]
-aircraft.C_motor_per_hp = 150;    % [$/hp]
-aircraft.C_batt_kWh     = 520;    % [$/kWh]
-aircraft.DoD = 0.85;  aircraft.eta_chg = 0.92;  aircraft.P_elec = 0.15;
+%max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
 
 
+%% Updated Weight Estimate and P-S Curves
 
-S_sweep = 100:10:3000;
+design_margin = 1.025;
 
-% Run P-S Constraint Section
-[P_point, S_point, ps] = PS_constraintcurves(S_sweep, aircraft.W0_lb, W_S_point, aircraft);
+p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CLmax_to, ...
+    'prop_efficiency', aircraft.prop_efficiency,'Wcr_W0', aircraft.Wcr_W0,'Wclimb_W0', aircraft.Wclimb_W0, ...
+    'Wce_W0',aircraft.Wce_W0,'Wland_W0',aircraft.Wland_W0,'Pcr_P0',aircraft.Pcr_P0,'Neng',aircraft.num_propeller,'alt_cr',aircraft.alt_cr, 'design_margin', aircraft.design_margin);
+
+S_sweep = 500:10:4000;
+
+[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
+
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
     1765, aircraft.W0_lb, 649, W_S_point, aircraft.prop_efficiency, aircraft);
 
 
-
-aircraft = set_sizing_results(aircraft, P_point, W0_design, WeightStruct);
-em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
@@ -186,6 +128,13 @@ disp(fuel_volume)
 
 
 
-%% Cost Estimate
 
-[c] = aircraftcost(aircraft);
+%% Cost Output based on Design Points
+
+[c] = aircraftcost(aircraft_data_01);
+
+disp("Total Cost = $" + c.tot_cost );
+disp("COC", c.T1);
+disp("FOC", c.T2);
+disp("IOC", c.T3);
+disp("Aircraft Cost", c.T0);
