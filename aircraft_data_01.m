@@ -18,7 +18,7 @@ p.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
 p.ticket_price = 200;     % [$]      average one-way fare on the target route
 
 % ---------- Aircraft Specific ----------
-p.MTOW        = 10391;    % [lb]
+p.MTOW        = 14389;    % [lb]
 p.PW          = 0.1;     % [kW/kg]  Power - Weight ratio
 p.SHP_to      = p.PW*p.MTOW; % [shp] set directly to override SHP_per_lb
 p.n_engines   = 6;        % [-]      number of engines

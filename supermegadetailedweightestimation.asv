@@ -1,0 +1,55 @@
+% super mega detailed weight estimation (adapted from Algorithm 5 Metabook)
+
+function [W] = supermegadetailedweightestimation(Wguess, P0, S0, aircraft)
+% more detailed weight buildup using metabook and chosen systems
+
+    W0 = Wguess;
+
+    % constant weights (RFP)
+    W_payload = aircraft.payload_weight;
+
+    % chosen design weights/parameters
+    n_prop = aircraft.num_propeller;
+    W_prop_weight = aircraft.prop_weight  * n_prop;
+    n_turbogenerators = aircraft.n_turbogenerators;
+    W_turbogenerators = n_turbogenerators * aircraft.weight_turbogenerators;
+    W_electric_motors = n_prop * aircraft.weight_electric_motors;
+    
+  
+    tol = 0.1;
+   
+    AR = aircraft.AR;
+    W_fuselage = 5 * aircraft.S_fuselage;
+    W_horizontaltail = 5.5 * aircraft.horiz_area;
+    W_verticaltail = 5.5 * aircraft.vert_area;
+    N_zg = aircraft.ultimate_load_factor
+    W_wing = 0.0051 * (W0 * N_zg) ^0.557 * S0^0.649 * (AR)^0.5 * ();
+
+    converged = false;
+    while converged == false
+       [Wf, ~, ~] = fuel_fraction_calc(P, W0, aircraft);
+        W_landinggear = 0.043 * W0;
+        W_extra = 0.17 * W0;
+        W0_new = Wf + W_payload + W_prop_weight+ W_turbogenerators + W_electric_motors + W_fuselage + W_horizontaltail+ W_verticaltail + W_landinggear + W_extra; 
+        if (W0_new - W0) <= tol
+            converged = true;
+        end
+        W0 = W0_new;   
+    end
+
+    W.payload = W_payload;
+    W.fuel_weight = Wf;
+    
+    W.prop_weight = W_prop_weight;
+    W.turbogenerator_weight = W_turbogenerators;
+    W.electricmotor_weight = W_electric_motors;
+    W.fuselage_weight = W_fuselage;
+    W.horizontaltail_weight = W_horizontaltail;
+    W.verticaltail_weight = W_verticaltail;
+    W.landinggear_weight = W_landinggear;
+    W.extra_weight = W_extra;
+
+    W.airframe = W_fuselage_weight + W_verticaltail + W_horizontaltail + W_wing + W_landinggear;
+    W.emptyweight = W.airframe + W_prop_weight + W_turbogenerators + W_electric_motors + W_battery + W_extra;
+    W.MTOW = W.emptyweight + W_payload + Wf;
+end

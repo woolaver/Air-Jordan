@@ -14,20 +14,49 @@ aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data S
 aircraft.L_D = 11.8746; %From aircraftDesignDriver, comes from force balance at cruise
 aircraft.AR = 11; %From aircraftDesignDriver
 aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
+aircraft.alt_cr = 10000; %feet
+aircraft.crew_weight = 1520; %lbs from RFP
+aircraft.baggage_weight = 240; % lbs from RFP
+aircraft.payload_weight = aircraft.crew_weight + aircraft.baggage_weight;
+
+aircraft.specific_fuel_consumption_cruise = .412*1.64399; %lb/(hp*h) converted from kg/(kW*h) from turbogenerator analysis in report 5
+aircraft.R_fuel = 200; %nmi, fuel range
+aircraft.V_cr = 225; %kts, from RFP
+aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
+aircraft.n_engine = 2; % number of turbogenerators
+
+% Wing / Aerodynamic Qualities
+aircraft.taperratio = 1;
+aircraft.root_tip_ratio = 1;
+aircraft.wing_sweep = 0;
+%aircraft.wing_cont_surf_area = ; % wing mounted control surface area
+aircraft.wing_area = 649; % ft^2, from design point
+
+% Tail and Horizontal Stabilizer Quantities
+aircraft.horiz_area = 154.8; % ft^2, horizontal tail area
+aircraft.vert_area = 100; % ft^2, vertical tail area
+
+% Load Factor
+aircraft.ultimate_load_factor = 1.5 * 3 * 32.174; % 1.5 x max load factor, 3g's selected (FAR)
+
+% Propulsion System Quantities
+aircraft.num_propeller = 10; %from Data Sheet
+aircraft.prop_efficiency = .82; % from Data Sheet
+aircraft.prop_weight = 44.1; % lbs per propeller, chosen props
+aircraft.n_turbogenerators = 2; % number of chosen turbogenerators
+aircraft.weight_turbogenerators = 530.4; % lbs, weight of chosen turbogenerator
+aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
+
+% CAD System Results
+aircraft.S_fuselage = 1200;
+
+% Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
 aircraft.eb_star = 505*3600; %505 Wh/kg converted to SI units J/kg
 aircraft.battery_degredation = .9; %assuing battery replacement at 90% of battery max charge
-aircraft.alt_cr = 10000; %feet
-aircraft.num_propeller = 10; %from Data Sheet
-aircraft.prop_efficiency = .82; % from Data Sheet
-aircraft.payload_weight = 1519; %lbs from Data Sheet
-aircraft.specific_fuel_consumption_cruise = .412*1.64399; %lb/(hp*h) converted from kg/(kW*h) from turbogenerator analysis in report 5
-aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
-aircraft.V_cr = 225; %kts, from RFP
-aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
 
 %% Initial Weight Estimation
 
@@ -127,8 +156,6 @@ disp('Fuel Volume (ft^3): ')
 disp(fuel_volume)
 
 
-
-
 %% Cost Output based on Design Points
 
 [c] = aircraftcost(aircraft_data_01);
@@ -138,3 +165,10 @@ disp("COC", c.T1);
 disp("FOC", c.T2);
 disp("IOC", c.T3);
 disp("Aircraft Cost", c.T0);
+
+[Wimproved] = supermegadetailedweightestimation(W0, 1765, aircraft);
+
+
+
+
+
