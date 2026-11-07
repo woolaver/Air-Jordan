@@ -156,6 +156,12 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q_cr*pi*aircraft.AR*e_clean));
     P_W_man_cor = P_W_man .* (aircraft.Wcr_W0 / aircraft.Pcr_P0);
 
+    W_S_em = W_S_sweep.*aircraft.Wem_W0;                              % lb/ft^2 at failure weight
+    CL_br  = sqrt(aircraft.CD0_clean/k_clean);                        % CL at max L/D
+    V_br   = sqrt(2.*W_S_em./(aircraft.rho_em*CL_br));                % ft/s
+    P_W_em = aircraft.Wem_W0.*(V_br./(550*aircraft.prop_efficiency)) ...
+        .*(aircraft.G_em + 2*sqrt(aircraft.CD0_clean*k_clean))./aircraft.Hp;   % hp per lb of W0
+
     %Design point will be at intersection of landing and takeoff curve with
     %additional margin
 

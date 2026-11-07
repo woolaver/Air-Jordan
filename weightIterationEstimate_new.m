@@ -83,7 +83,7 @@ function [W0, p] = weightIterationEstimate_new(P, W0, S, WdivSDesign, eta)
 end
 
 function elec = hybrid_data()
-    elec.Hp          = 0.8;          % Hybrid Power Split
+    elec.Hp          = aircraft.Hp;          % Hybrid Power Split
     elec.motor_power_each = 188;         % initial system selection hp per engine
     elec.w_motor_each   = 33; % lbs
     elec.R              = 225;          % nmi electric cruise incl. 25 nmi takeoff/climb

@@ -119,6 +119,16 @@ BlownWingAnalysis(aircraft)
 
 %max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
 
+% emergency range parameters
+aircraft.h_field    = 0;         % [ft] field elevation (rho_takeoff is sea-level ISA+18F)
+aircraft.h_fail_agl = 5000;      % [ft] AGL at failure
+aircraft.dT_K       = 18*5/9;    % [K]  ISA+18 F is a 10 K difference
+aircraft.rho_em     = density_isa_offset(aircraft.h_field + aircraft.h_fail_agl, aircraft.dT_K);
+aircraft.Wem_W0     = 1.0;       % [-]  weight at failure / MTOW
+aircraft.G_em       = 0.0;       % [-]  gradient margin (0 = level flight)
+aircraft.Hp         = 0.8;       % [-]  battery-fed share of installed P (the split hybrid_data hard-coded)
+
+
 
 %% Updated Weight Estimate and P-S Curves
 
@@ -133,7 +143,7 @@ S_sweep = 500:10:4000;
 [P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, p);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
-
+em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
     1765, aircraft.W0_lb, 649, W_S_point, aircraft.prop_efficiency, aircraft);
@@ -166,7 +176,7 @@ disp("FOC", c.T2);
 disp("IOC", c.T3);
 disp("Aircraft Cost", c.T0);
 
-[Wimproved] = supermegadetailedweightestimation(W0, 1765, aircraft);
+[Wimproved] = supermegadetailedweightestimation(14389, 1765, aircraft);
 
 
 

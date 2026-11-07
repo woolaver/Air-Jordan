@@ -21,7 +21,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
     a = 0.009; b = 4.9;
     env.TOP = (-b + sqrt(b^2 + 4*a*env.sTOG))/(2*a);
     
-    env.sland   = 300   
+    env.sland   = 300   ;
     env.WS_land = (env.sland/80)*(env.rho/env.rho_sl)*aircraft.CLmax_to/aircraft.Wland_W0;
     
     
