@@ -15,6 +15,7 @@ aircraft.L_D = 11.8746; %From aircraftDesignDriver, comes from force balance at 
 aircraft.AR = 11; %From aircraftDesignDriver
 aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
 aircraft.alt_cr = 10000; %feet
+aircraft.climb_rate = 1500; % 1500 f/m climb
 aircraft.crew_weight = 1520; %lbs from RFP
 aircraft.baggage_weight = 240; % lbs from RFP
 aircraft.payload_weight = aircraft.crew_weight + aircraft.baggage_weight;
@@ -48,13 +49,22 @@ aircraft.weight_turbogenerators = 530.4; % lbs, weight of chosen turbogenerator
 aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
 
 % CAD System Results
-aircraft.S_fuselage = 1200;
+aircraft.S_fuselage = 400;
 
 % Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
-aircraft.eb_star = 505*3600; %505 Wh/kg converted to SI units J/kg
-aircraft.battery_degredation = .9; %assuing battery replacement at 90% of battery max charge
+aircraft.battery.e_cell_Whkg = 505;    % [Wh/kg] cell level (
+aircraft.battery.pack_factor = 0.70;   % [-] pack/cell mass: BMS, structure, cooling  
+aircraft.battery.soc_max     = 0.95;   % [-] max state of charge                                        
+aircraft.battery.soc_min     = 0.10;   % [-] min state of charge                                     
+aircraft.battery.fade        = 0.90;   % [-] end-of-life capacity 
+aircraft.battery.p_spec_kWkg = 1.5;    % [kW/kg] pack-level discharge power 
+b = aircraft.battery;
+aircraft.eb_star = b.e_cell_Whkg * 3600 * b.pack_factor*(b.soc_max - b.soc_min);
+aircraft.battery_degredation = b.fade; %assuing battery replacement at 90% of battery max charge
+aircraft.DoD = b.soc_max - b.soc_min;
+
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
 
@@ -166,6 +176,15 @@ disp('Fuel Volume (ft^3): ')
 disp(fuel_volume)
 
 
+% Improved weight estimation
+
+[Wimproved] = supermegadetailedweightestimation(14389, 1765, aircraft);
+
+
+
+
+
+
 %% Cost Output based on Design Points
 
 [c] = aircraftcost(aircraft_data_01);
@@ -175,10 +194,3 @@ disp("COC", c.T1);
 disp("FOC", c.T2);
 disp("IOC", c.T3);
 disp("Aircraft Cost", c.T0);
-
-[Wimproved] = supermegadetailedweightestimation(14389, 1765, aircraft);
-
-
-
-
-

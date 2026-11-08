@@ -8,5 +8,5 @@ function a = set_sizing_results(aircraft, P, W0, Ws)
     a.W_f        = Ws.Wf;                                     % [lb]
     a.W_oil      = 0.0125*Ws.Wf*a.tb/100;                     % [lb]
     a.W_b        = Ws.W_batt;                                 % [lb]
-    a.E_batt     = a.W_b*0.45359237*(a.eb_star/3600)/1000;    % [kWh] installed pack energy
+    a.E_batt = a.W_b*0.45359237*a.battery.e_cell_Whkg*a.battery.pack_factor/1000;   % installed pack energy [kWh]
 end
