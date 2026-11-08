@@ -52,10 +52,21 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     % descent
     W5_W4 = 0.992; % historical value
     % loiter
-    W6_W5 = 0.992; % historical value 
+    W5 = W5_W4 * W4_W3 * Wcr;
+    rho_loit = density_isa_offset(5000, 18);
+    CL_loit = sqrt(3 * CD0_clean/k_clean);
+    CD_loit = CD0_clean + k_clean * CL_loit^2;
+    LD_loit = CL_loit^(3/2) / CD_loit;
+    V_loit = sqrt(2 * W5 / (rho_loit * S*CL_loit));
+    E_loit = aircraft.divert_time;
+    W6_W5 = exp(-(E_loit*60 * c_ft * V_loit) / (eta * LD_loit));
+    
+    % landing
+    W7_W6 = 0.992; % historical value
+
     % total
-    W6_W0 = W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
-    Wf_W0 = 1 - W6_W0;
+    W7_W0 = W7_W6*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
+    Wf_W0 = 1 - W7_W0;
     Wf    = Wf_W0*W0;
 
     fuelfrac.taxi = W1_W0;
@@ -64,5 +75,7 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     fuelfrac.cruise = W4_W3;
     fuelfrac.descent = W5_W4;
     fuelfrac.loiter = W6_W5;
+    fuelfrac.landing = W7_W6;
+    fuelfrac.total = Wf_W0;
 
 end

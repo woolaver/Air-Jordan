@@ -28,4 +28,5 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc(P, W0, aircraft)
          fuelfrac.cruise = W4_W3;
          fuelfrac.descent = W5_W4;
          fuelfrac.loiter = W6_W5;
+         fuelfrac.tot = Wf_W0;
 end

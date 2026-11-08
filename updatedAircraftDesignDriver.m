@@ -32,13 +32,14 @@ aircraft.root_tip_ratio = 1;
 aircraft.wing_sweep = 0;
 %aircraft.wing_cont_surf_area = ; % wing mounted control surface area
 aircraft.wing_area = 649; % ft^2, from design point
+aircraft.wing_control_surf_area = 0.3 * aircraft.wing_area;
 
 % Tail and Horizontal Stabilizer Quantities
 aircraft.horiz_area = 154.8; % ft^2, horizontal tail area
 aircraft.vert_area = 100; % ft^2, vertical tail area
 
 % Load Factor
-aircraft.ultimate_load_factor = 1.5 * 3 * 32.174; % 1.5 x max load factor, 3g's selected (FAR)
+aircraft.ultimate_load_factor = 1.5 * 2.2 * 32.174; % 1.5 x max load factor, 2.2's selected (FAR)
 
 % Propulsion System Quantities
 aircraft.num_propeller = 10; %from Data Sheet
@@ -49,7 +50,7 @@ aircraft.weight_turbogenerators = 530.4; % lbs, weight of chosen turbogenerator
 aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
 
 % CAD System Results
-aircraft.S_fuselage = 400;
+aircraft.S_fuselage = 931;
 
 % Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
@@ -67,6 +68,7 @@ aircraft.DoD = b.soc_max - b.soc_min;
 
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
+aircraft.divert_time = 45; % 45 minutes of diversion time
 
 %% Initial Weight Estimation
 

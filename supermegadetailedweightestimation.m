@@ -21,9 +21,11 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     W_fuselage = 1.4 * aircraft.S_fuselage;
     W_horizontaltail = 2 * aircraft.horiz_area;
     W_verticaltail = 2 * aircraft.vert_area;
-    % N_zg = aircraft.ultimate_load_factor
+    Nz = aircraft.ultimate_load_factor;
     % W_wing = 0.0051 * (W0 * N_zg) ^0.557 * S0^0.649 * (AR)^0.5 * ();  %
     % which is better guess? long form or Raymer based on area
+  %  W_wing = 0.0051 * (W0 * Nz)^0.557 * aircraft.wing_area^0.649 * aircraft.AR^0.5 * (0.154)^(-0.4) * (1 + aircraft.taperratio)^(0.1)*(cos(aircraft.wing_sweep))^(-1)*aircraft.wing_control_surf_area^0.1;
+    
     W_wing = 2.5 * aircraft.wing_area;
 
 
@@ -42,7 +44,7 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
         
         % landing gear
         W_landinggear = 0.043 * W0;
-        W_extra = 0.07 * W0;
+        W_extra = 0.1 * W0;
         % total weight component add-up
         W0_new = Wf + W_payload + W_prop_weight+ W_turbogenerators + W_electric_motors + W_battery + W_reserve_battery + W_fuselage + W_horizontaltail+ W_verticaltail + W_wing + W_landinggear + W_extra; 
         if abs(W0_new - W0) <= tol
