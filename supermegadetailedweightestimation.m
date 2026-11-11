@@ -24,9 +24,9 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     Nz = aircraft.ultimate_load_factor;
     % W_wing = 0.0051 * (W0 * N_zg) ^0.557 * S0^0.649 * (AR)^0.5 * ();  %
     % which is better guess? long form or Raymer based on area
-  %  W_wing = 0.0051 * (W0 * Nz)^0.557 * aircraft.wing_area^0.649 * aircraft.AR^0.5 * (0.154)^(-0.4) * (1 + aircraft.taperratio)^(0.1)*(cos(aircraft.wing_sweep))^(-1)*aircraft.wing_control_surf_area^0.1;
+    W_wing = 0.0051 * (W0 * Nz)^0.557 * aircraft.wing_area^0.649 * aircraft.AR^0.5 * (0.154)^(-0.4) * (1 + aircraft.taperratio)^(0.1)*(cos(aircraft.wing_sweep))^(-1)*aircraft.wing_control_surf_area^0.1;
     
-    W_wing = 2.5 * aircraft.wing_area;
+   % W_wing = 2.5 * aircraft.wing_area;
 
 
     R_ft = aircraft.e_range * 6076; % electric cruise range in feet
@@ -74,8 +74,8 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     W.landinggear_weight = W_landinggear;
     W.extra_weight = W_extra;
     W.reserve_battery_weight = W_reserve_battery;
-    W.airframe = W_fuselage + W_verticaltail + W_horizontaltail + W_wing + W_landinggear;
-    W.emptyweight = W.airframe + W_prop_weight + W_turbogenerators + W_electric_motors + W_battery;
+    W.airframe = W_fuselage + W_verticaltail + W_horizontaltail + W_wing + W_landinggear + W_extra;
+    W.emptyweight = W.airframe + W_prop_weight + W_turbogenerators + W_electric_motors + W_battery + W_reserve_battery;
     W.MTOW = W.emptyweight + W_payload + Wf;
 
     names = {'Payload','Fuel','Fuselage','Wing','H-Tail','V-Tail','Landing Gear', ...
