@@ -78,11 +78,20 @@ disp(fuel_volume)
 
 [Wimproved] = supermegadetailedweightestimation(14389, 1765, aircraft);
 
+%% Aerodynamic Refinement
 
+aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
+aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
+aircraft.S_wet_empennage = 133.989; %ft^2, from CAD as of 11/7
+aircraft.wing_MAC = 7.68; %from PDR slides
+aircraft.fuselage_length = 24.38; %ft, from CAD drawings from PDR
+aircraft.empennage_length = 10.2895; %ft, from CAD drawings from PDR
+aircraft.h_tail_MAC = 6.45; %ft, from PDR report
+aircraft.v_tail_MAC = 9.17; %ft, from PDR report
 
+CD0_clean_updated = aerodynamicRefinement(aircraft);
 
-
-
+disp("Updated CD0_clean: " + CD0_clean_updated)
 %% Cost Output based on Design Points
 
 [c] = aircraftcost(aircraft_data_01);
