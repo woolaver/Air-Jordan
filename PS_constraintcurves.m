@@ -1,10 +1,12 @@
 function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft)
 
-    require_fields(aircraft, {'AR','Cf_clean','CLmax_to','Wcr_W0','Wce_W0','Wclimb_W0', ...
+   %{ 
+        require_fields(aircraft, {'AR','Cf_clean','CLmax_to','Wcr_W0','Wce_W0','Wclimb_W0', ...
         'Wland_W0','Pcr_P0','prop_efficiency','alt_cr','V_cr','rho_takeoff', ...
-        'num_propeller','design_margin', 'rho_em', 'Wem_W0', 'G_em', 'Hp'}, mfilename);
+        'num_propeller','design_margin', 'rho_em', 'Wem_W0', 'G_em', 'Hp'}, mfilename); 
+        %}
     
-    W0_guess = aircraft.W0_lb;                   
+    W0_guess = aircraft.W0;                
     S_point  = W0_guess / W_S_point;       
     S_sweep  = S_sweep(:);
     

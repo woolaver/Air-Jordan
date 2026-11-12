@@ -3,9 +3,9 @@
 %utilize struct to contain all aircraft information in a single object to
 %make function calls easier
 
-clear
-clc
-close all
+clear;
+clc;
+close all;
 
 % call in aircraft struct
 aircraft = aircraft();
@@ -24,13 +24,13 @@ aircraft.Wto_W0 = Wto_W0;
 %% Preliminary Sizing Estimate
 
 
-design_margin = .025; % 2.5% margin on P/W, W/S design point
 
-[W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin);
+
+[W_S_point, P_W_point] = preliminary_Sizing(aircraft, aircraft.design_margin);
 
 %% Blown Wing Analysis
 
-BlownWingAnalysis(aircraft)
+% BlownWingAnalysis(aircraft);
 
 %W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
@@ -54,7 +54,7 @@ disp("P-S design wing area: " + S_point + "ft^2");
 em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    1765, aircraft.W0_lb, 649, W_S_point, aircraft.prop_efficiency, aircraft);
+    P_point, aircraft.W0_lb, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
 
 
 
@@ -76,18 +76,11 @@ disp(fuel_volume)
 
 % Improved weight estimation
 
-[Wimproved] = supermegadetailedweightestimation(14389, 1765, aircraft);
+[Wimproved] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
 
 %% Aerodynamic Refinement
 
-aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
-aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
-aircraft.S_wet_empennage = 133.989; %ft^2, from CAD as of 11/7
-aircraft.wing_MAC = 7.68; %from PDR slides
-aircraft.fuselage_length = 24.38; %ft, from CAD drawings from PDR
-aircraft.empennage_length = 10.2895; %ft, from CAD drawings from PDR
-aircraft.h_tail_MAC = 6.45; %ft, from PDR report
-aircraft.v_tail_MAC = 9.17; %ft, from PDR report
+
 
 CD0_clean_updated = aerodynamicRefinement(aircraft);
 

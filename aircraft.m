@@ -3,6 +3,9 @@
 function [aircraft] = aircraft()
 %% Main Assumptions:
 
+aircraft.Cf_clean = 0.15;
+
+aircraft.design_margin = .025; % 2.5% margin on P/W, W/S design point
 
 %Initial weight properties
 aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data Sheet (not including batteries)
@@ -120,11 +123,21 @@ aircraft.G_em       = 0.0;       % [-]  gradient margin (0 = level flight)
 aircraft.Hp         = 0.8;       % [-]  battery-fed share of installed P (the split hybrid_data hard-coded)
 
 % weight values to be updated as script runs
-aircraft.W0 = 0;
 aircraft.Wcr_W0 = 0;
 aircraft.Wland_W0 = 0;
 aircraft.Wclimb_W0 = 0;
 aircraft.Wce_W0 = 0;
 aircraft.Wto_W0 = 0;
+
+
+aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
+aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
+aircraft.S_wet_empennage = 133.989; %ft^2, from CAD as of 11/7
+aircraft.wing_MAC = 7.68; %from PDR slides
+aircraft.fuselage_length = 24.38; %ft, from CAD drawings from PDR
+aircraft.empennage_length = 10.2895; %ft, from CAD drawings from PDR
+aircraft.h_tail_MAC = 6.45; %ft, from PDR report
+aircraft.v_tail_MAC = 9.17; %ft, from PDR report
+
 
 end
