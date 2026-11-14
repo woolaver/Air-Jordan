@@ -51,8 +51,6 @@ aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
 % CAD System Results
 aircraft.S_fuselage = 931;
 
-
-
 % Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
@@ -90,28 +88,29 @@ aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
 aircraft.delta_F = 60; %deg, flap deflection, assuming same for landing and takeoff for now
 aircraft.landing_speed = 55; %kts, from blown wing landing analysis
 aircraft.eta_F = .81; %Estimate from Cinar slides
-aircraft.e_land = .725; %oswald efficiency with landing flaps estimate from Roskam's
+aircraft.e_takeoff = .78; %oswald efficiency with takeoff flaps from AVL
+aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
+aircraft.e_cr = .93; %oswald efficiency with clean wing from AVL
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
-aircraft.mu_b = .4; %braking coefficient, estimate from Cinar slides
+aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
 aircraft.mu = .0165; %rolling resistance estimate, used for transport aircraft
 aircraft.CL_tail = -.5; %initial CL_tail
-aircraft.CL_tail_dot = .05; %random estimate
-aircraft.Iyy = 20000; %slug*ft^2, estimate from light twin engine aircraft ~ 12500 lbs
+aircraft.CL_tail_dot = .1; %random estimate
+aircraft.Iyy = 30000; %slug*ft^2, estimate twin engine turboprop
 aircraft.Cm_wb_0 = .05; %estimate from google
 aircraft.S = 650; % from updated sizing plot
-aircraft.c_bar = aircraft.S/aircraft.AR;
-aircraft.x_mlg = .65*aircraft.c_bar; %estimate from Cinar
-aircraft.x_cg = .35*aircraft.c_bar; %estimate from Cinar
-aircraft.x_acw = .25*aircraft.c_bar; %assuming ac is at quarter chord
-aircraft.Sh = .4*aircraft.S; %estimated 40% sizing of tail
-aircraft.l_tail = 30; %ft, estimated from beechcraft baron
-aircraft.z_cg = 10; %ft, estimated from beechcraft baron
-aircraft.z_mlg = 0; %ft, main landing gear on the ground
-aircraft.CL_max_stall = 10; %from blown wing analysis 
-
-
+aircraft.c_bar = 7.68; %from PDR slides
+aircraft.x_mlg = 18.38; %ft, from CAD as of 11/7
+aircraft.x_cg = 16.5; %ft
+aircraft.x_acw = 16.036745 + .25*aircraft.c_bar; %assuming ac is at quarter chord
+aircraft.Sh = 318.22; %from CAD as of 11/7
+aircraft.l_tail = 30.62; %ft, from PDR
+aircraft.z_cg = 6.9985/2 + 3.49; %ft, estimating center of fuselage
+aircraft.z_mlg = 0; %ft, on the ground
+aircraft.CL_max_stall = 8.4962; %from blown wing analysis 
+aircraft.wing_incidence = 2; %deg, from PDR slides
 
 % emergency range parameters
 aircraft.h_field    = 0;         % [ft] field elevation (rho_takeoff is sea-level ISA+18F)
@@ -129,15 +128,17 @@ aircraft.Wclimb_W0 = 0;
 aircraft.Wce_W0 = 0;
 aircraft.Wto_W0 = 0;
 
-
+aircraft.S_wet_fuselage = 517.96; %ft^2 from CAD as of 11/7
 aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
 aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
-aircraft.S_wet_empennage = 133.989; %ft^2, from CAD as of 11/7
 aircraft.wing_MAC = 7.68; %from PDR slides
-aircraft.fuselage_length = 24.38; %ft, from CAD drawings from PDR
-aircraft.empennage_length = 10.2895; %ft, from CAD drawings from PDR
+aircraft.fuselage_length = 34.911; %ft, from CAD drawings from PDR
 aircraft.h_tail_MAC = 6.45; %ft, from PDR report
 aircraft.v_tail_MAC = 9.17; %ft, from PDR report
+aircraft.fuselage_height = 6.9985; %from PDR drawings
+aircraft.fuselage_width = 5.67; %from PDR drawings
+aircraft.V_land = 40; %kts, estimation for now, needs to come from landing analysis
+aircraft.V_takeoff = 40; %kts, estimation for now, needs to come from takeoff analysis
 
 
 end
