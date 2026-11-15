@@ -173,9 +173,9 @@ function BlownWingAnalysis(aircraft)
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
 
         if (V_stall_flaps > V_stall_calc)
-            V_stall_flaps = V_stall_flaps - .1;
+            V_stall_flaps = V_stall_flaps - .01;
         else
-            V_stall_flaps = V_stall_flaps + .1;
+            V_stall_flaps = V_stall_flaps + .01;
         end
     end
 
@@ -231,9 +231,9 @@ function BlownWingAnalysis(aircraft)
         diff = abs(V_stall_clean - V_stall_calc)/V_stall_clean;
 
         if (V_stall_clean > V_stall_calc)
-            V_stall_clean = V_stall_clean - .1;
+            V_stall_clean = V_stall_clean - .01;
         else
-            V_stall_clean = V_stall_clean + .1;
+            V_stall_clean = V_stall_clean + .01;
         end
     end
 
@@ -247,8 +247,7 @@ function BlownWingAnalysis(aircraft)
     disp("Clean Unblown Wing CL_max: " + CL_max_clean_unblown)
 
     
-    %% Landing Approach and Distance
-    
+    %% Landing Approach and Distance (OLD VERSION)
     %{
     CD0 = .015 + .065 + .02;
     
@@ -347,7 +346,8 @@ function BlownWingAnalysis(aircraft)
     brake = 0;
 
     %Required Parameters
-    CD0_land = aircraft.CD0_land + .2;
+    CD0_land = aircraft.CD0_land;
+    CD0_land_brake = aircraft.CD0_land_brake;
     e_land = aircraft.e_land;
     mu_brake = aircraft.mu_b + .1;
 
@@ -429,7 +429,7 @@ function BlownWingAnalysis(aircraft)
                     CL_tail = CL_tail - CL_tail_dot*dt;
                 end
                
-                Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W_land/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) + CX*((z_cg - z_mlg)/c_bar) + ((m_land*V_dot)/(.5*rho*V(i)^2*S))*((z_cg - z_mlg)/c_bar);
+                Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W_land/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) - CX*((z_cg - z_mlg)/c_bar) + ((m_land*V_dot)/(.5*rho*V(i)^2*S))*((z_cg - z_mlg)/c_bar);
                 M_mlg = Cm_mlg*.5*rho*V(i)^2*S*c_bar;
                 Iyy_mlg = Iyy + m_land*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
     
@@ -440,18 +440,13 @@ function BlownWingAnalysis(aircraft)
                 alpha(i+1) = alpha(i); %keep alpha constant once it reaches target
             end
    
-
-            disp("Angle of attack: " + rad2deg(alpha(i+1)))
-
             V(i+1) = V(i) + V_dot*dt;
     
             gamma_dot = (L - W_land*cos(gamma(i)))/(m_land*V(i+1));
     
             gamma(i+1) = gamma(i) + gamma_dot*dt;
-            disp("flight path angle: " + gamma(i+1))
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
-            disp("height: " + h(i+1))
             CL_vec(i+1) = CL;
 
             if(h(i+1) < 0)
@@ -472,7 +467,8 @@ function BlownWingAnalysis(aircraft)
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            %CL = CL_u + F_Cj - F_0;
+            CL = 0;
 
             L = .5*rho*V(i)^2*S*CL; %lbs
 
@@ -480,7 +476,7 @@ function BlownWingAnalysis(aircraft)
 
     
             %estimate CX
-            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) + T_c_prime_rev;
+            CX = CD0_land_brake + CL^2/(pi*e_land*AR + 2*delta_C_j) + T_c_prime_rev;
         
             X = .5*rho*V(i)^2*S*CX; %lbs
         
@@ -548,8 +544,9 @@ function BlownWingAnalysis(aircraft)
     ylabel('CL')
     xlabel('Speed (ft/s)')
 
+    disp("Blown Wing Landing Distance: " + s(end) + " ft")
+
     %% Integrate Takeoff 
-    %{
     T0 = (2*rho*Ad)^(1/3)*(eta_a*P_sh)^(2/3); %Zero-velocity thrust
     
     W = aircraft.W0; %lbs, conservative estimate from preliminary sizing code
@@ -577,7 +574,7 @@ function BlownWingAnalysis(aircraft)
     x_cg = aircraft.x_cg; %estimate from Cinar
     x_acw = aircraft.x_acw; %assuming ac is at quarter chord
     Sh = aircraft.Sh; %estimated 40% sizing of tail
-    l_tail = aircraft.l_tail; %ft, estimated from beechcraft baron
+    l_tail = aircraft.l_tail + 6; %ft, estimated from beechcraft baron
     z_cg = aircraft.z_cg; %ft, estimated from beechcraft baron
     z_mlg = aircraft.z_mlg; %ft, main landing gear on the ground
     CD0_takeoff = aircraft.CD0_takeoff;
@@ -633,7 +630,6 @@ function BlownWingAnalysis(aircraft)
         end
     
         if(rotate == 1)
-            disp(alpha(i))
             %estimate CL
             CL_u = .1856 + .0334*delta_F + .0667*alpha(i);
             A0 = .1856 + .0334*delta_F + .0667*alpha(i);
@@ -658,7 +654,7 @@ function BlownWingAnalysis(aircraft)
                     CL_tail = CL_tail - CL_tail_dot*dt;
                 end
                
-                Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) + CX*((z_cg - z_mlg)/c_bar) + (m*V_dot)*((z_cg - z_mlg)/c_bar);
+                Cm_mlg = Cm_wb + CL*((x_mlg - x_acw)/c_bar) - CL_tail*(Sh/S)*((l_tail - x_mlg + x_cg)/c_bar) - (W/(.5*rho*V(i)^2*S))*((x_mlg - x_cg)/c_bar) - CX*((z_cg - z_mlg)/c_bar) + ((m*V_dot)/(.5*rho*V(i)^2*S))*((z_cg - z_mlg)/c_bar);
                 M_mlg = Cm_mlg*.5*rho*V(i)^2*S*c_bar;
                 Iyy_mlg = Iyy + m*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
     
@@ -790,6 +786,8 @@ function BlownWingAnalysis(aircraft)
     title('Takeoff Roll CL vs. Speed')
     ylabel('CL')
     xlabel('Speed (ft/s)')
+
+    disp("Blown Wing Takeoff Distance: " + s(end) + " ft")
 
     %}
 end

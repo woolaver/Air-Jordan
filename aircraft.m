@@ -3,14 +3,14 @@
 function [aircraft] = aircraft()
 %% Main Assumptions:
 
-aircraft.Cf_clean = 0.15;
+aircraft.Cf_clean = 0.0064261; %from aerodynamicRefinement
 
 aircraft.design_margin = .025; % 2.5% margin on P/W, W/S design point
 
 %Initial weight properties
 aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data Sheet (not including batteries)
-aircraft.L_D = 11.8746; %From aircraftDesignDriver, comes from force balance at cruise
-aircraft.AR = 11; %From aircraftDesignDriver
+aircraft.L_D = 11.4862; %From aircraftDesignDriver, comes from force balance at cruise
+aircraft.AR = 9; %From aircraftDesignDriver
 aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
 aircraft.alt_cr = 10000; %feet
 aircraft.climb_rate = 1500; % 1500 f/m climb
@@ -72,7 +72,7 @@ aircraft.divert_time = 45; % 45 minutes of diversion time
 
 % preliminary sizing
 
-aircraft.CD0_clean = .015;
+aircraft.CD0_clean = .024735; %from aerodynamicRefinement.m
 aircraft.CLmax_clean = 1.5;
 aircraft.CLmax_to = 7;
 aircraft.CLmax_climb = 3.472;
@@ -80,7 +80,7 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 
 %Blown wing analysis properties
-aircraft.W0 = 14389; %lbs
+aircraft.W0 = 16130; %lbs
 aircraft.prop_diameter = 5.5; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
@@ -97,17 +97,17 @@ aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
 aircraft.mu = .0165; %rolling resistance estimate, used for transport aircraft
 aircraft.CL_tail = -.5; %initial CL_tail
-aircraft.CL_tail_dot = .1; %random estimate
+aircraft.CL_tail_dot = .5; %random estimate
 aircraft.Iyy = 30000; %slug*ft^2, estimate twin engine turboprop
 aircraft.Cm_wb_0 = .05; %estimate from google
-aircraft.S = 650; % from updated sizing plot
-aircraft.c_bar = 7.68; %from PDR slides
+aircraft.S = 728.6425; % from AR of 9 with 22.1 wing loading
+aircraft.c_bar = 8.9978; %from AR of 9
 aircraft.x_mlg = 18.38; %ft, from CAD as of 11/7
 aircraft.x_cg = 16.5; %ft
-aircraft.x_acw = 16.036745 + .25*aircraft.c_bar; %assuming ac is at quarter chord
-aircraft.Sh = 318.22; %from CAD as of 11/7
+aircraft.x_acw = 11.72 + .25*aircraft.c_bar; %assuming ac is at quarter chord
+aircraft.Sh = 200; %Marley Estimation
 aircraft.l_tail = 30.62; %ft, from PDR
-aircraft.z_cg = 6.9985/2 + 3.49; %ft, estimating center of fuselage
+aircraft.z_cg = 11.591207/2; %6.9985/2 + 3.49 + 1; ft, estimating center of fuselage
 aircraft.z_mlg = 0; %ft, on the ground
 aircraft.CL_max_stall = 8.4962; %from blown wing analysis 
 aircraft.wing_incidence = 2; %deg, from PDR slides
@@ -131,8 +131,8 @@ aircraft.Wto_W0 = 0;
 aircraft.S_wet_fuselage = 517.96; %ft^2 from CAD as of 11/7
 aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
 aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
-aircraft.wing_MAC = 7.68; %from PDR slides
-aircraft.fuselage_length = 34.911; %ft, from CAD drawings from PDR
+aircraft.wing_MAC = 8.9978; %from updated AR = 9
+aircraft.fuselage_length = 50; %ft, from CAD drawings from PDR
 aircraft.h_tail_MAC = 6.45; %ft, from PDR report
 aircraft.v_tail_MAC = 9.17; %ft, from PDR report
 aircraft.fuselage_height = 6.9985; %from PDR drawings

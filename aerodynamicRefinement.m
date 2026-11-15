@@ -1,4 +1,4 @@
-function [CD0_clean, CD0_land, CD0_takeoff] = aerodynamicRefinement(aircraft)
+function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinement(aircraft)
 %Using Cinar slides 15-Aerodynamic Refinement, update aerodynamic values,
 %Computes updated drag polar
 %Inputs:
@@ -22,6 +22,7 @@ function [CD0_clean, CD0_land, CD0_takeoff] = aerodynamicRefinement(aircraft)
     alt_cr = aircraft.alt_cr; %ft converted to meters
     [~, a_cr, ~, rho_cr] = atmoscoesa(alt_cr/3.281);
     rho_cr = rho_cr/515.4; %slug/ft^3
+    rho_cr = 0.000891;
     a_cr = a_cr*3.281; %ft/s
 
     [T_land, ~, ~, ~] = atmoscoesa(0);
@@ -167,11 +168,20 @@ function [CD0_clean, CD0_land, CD0_takeoff] = aerodynamicRefinement(aircraft)
 
     D_q_tires = (.25*(6.824319/2) + .15*(6.824319/2))*3; %area from CAD, divide by 2 to get frontal area, multiply by 3 to get all three wheel pairs
     D_q_landing_gear = 3*(1.17*(0.8180572/2)); %landing gear shocks estimated as round struts with Re < 3*10^5, flying slow so should be accurate, divide area by 2 to get frontal area and multiply by 3 for 3 landing gears
+    
+    D_q_air_scoop = 1.5*(1);
 
-    CD_mis_clean = (1/Sref)*(D_q_fus + D_q_struts);
+    Ad = aircraft.num_propeller*(pi*aircraft.prop_diameter^2)/4;
+    disk_area_ratio = Ad/Sref;
 
-    CD_mis_land = (1/Sref)*(D_q_fus + D_q_struts + D_q_tires + D_q_landing_gear);
-    CD_mis_takeoff = (1/Sref)*(D_q_fus + D_q_struts + D_q_tires + D_q_landing_gear);
+    D_q_stopped_prop = .8*disk_area_ratio*2*(pi*aircraft.prop_diameter^2)/4;
+    D_q_air_brake = 1.6*(80);
+
+    CD_mis_clean = (1/Sref)*(D_q_fus + D_q_struts + D_q_air_scoop);
+
+    CD_mis_land = (1/Sref)*(D_q_fus + D_q_struts + D_q_air_scoop + D_q_tires + D_q_landing_gear + D_q_stopped_prop);
+    CD_mis_land_brake = (1/Sref)*(D_q_fus + D_q_struts + D_q_air_scoop + D_q_tires + D_q_landing_gear + D_q_stopped_prop + D_q_air_brake);
+    CD_mis_takeoff = (1/Sref)*(D_q_fus + D_q_struts + D_q_air_scoop + D_q_tires + D_q_landing_gear);
 
     %Flap Drag
     F_flap = .0074; %slotted flaps
@@ -184,10 +194,26 @@ function [CD0_clean, CD0_land, CD0_takeoff] = aerodynamicRefinement(aircraft)
     
     %Trim Drag NEED TO DO
 
+    Cf_total_clean = (Cf_tot_fus + Cf_tot_wing + Cf_tot_h_tail + Cf_tot_v_tail);
 
-    CD0_clean = 1.075*((1/Sref)*((Cf_tot_fus*FF_fus*Q_fus*S_wet_fus) + (Cf_tot_wing*FF_wing*Q_wing*S_wet_wing) + (Cf_tot_h_tail*FF_h_tail*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail*FF_v_tail*Q_v_tail*S_wet_v_tail)) + CD_mis_clean);
-    CD0_land = 1.075*((1/Sref)*((Cf_tot_fus_land*FF_fus_land*Q_fus*S_wet_fus) + (Cf_tot_wing_land*FF_wing_land*Q_wing*S_wet_wing) + (Cf_tot_h_tail_land*FF_h_tail_land*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_land*FF_v_tail_land*Q_v_tail*S_wet_v_tail)) + CD_mis_land) + CD0_flap;
-    CD0_takeoff = 1.075*((1/Sref)*((Cf_tot_fus_takeoff*FF_fus_takeoff*Q_fus*S_wet_fus) + (Cf_tot_wing_takeoff*FF_wing_takeoff*Q_wing*S_wet_wing) + (Cf_tot_h_tail_takeoff*FF_h_tail_takeoff*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_takeoff*FF_v_tail_takeoff*Q_v_tail*S_wet_v_tail)) + CD_mis_takeoff) + CD0_flap;
+    disp("Cf_total_clean: " + Cf_total_clean)
+
+    Leakage_factor = 1.075; %from Cinar, prop plane average
+    CD0_clean = Leakage_factor*((1/Sref)*((Cf_tot_fus*FF_fus*Q_fus*S_wet_fus) + (Cf_tot_wing*FF_wing*Q_wing*S_wet_wing) + (Cf_tot_h_tail*FF_h_tail*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail*FF_v_tail*Q_v_tail*S_wet_v_tail)) + CD_mis_clean);
+    CD0_land = Leakage_factor*((1/Sref)*((Cf_tot_fus_land*FF_fus_land*Q_fus*S_wet_fus) + (Cf_tot_wing_land*FF_wing_land*Q_wing*S_wet_wing) + (Cf_tot_h_tail_land*FF_h_tail_land*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_land*FF_v_tail_land*Q_v_tail*S_wet_v_tail)) + CD_mis_land) + CD0_flap;
+    CD0_takeoff = Leakage_factor*((1/Sref)*((Cf_tot_fus_takeoff*FF_fus_takeoff*Q_fus*S_wet_fus) + (Cf_tot_wing_takeoff*FF_wing_takeoff*Q_wing*S_wet_wing) + (Cf_tot_h_tail_takeoff*FF_h_tail_takeoff*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_takeoff*FF_v_tail_takeoff*Q_v_tail*S_wet_v_tail)) + CD_mis_takeoff) + CD0_flap;
+    CD0_land_brake = Leakage_factor*((1/Sref)*((Cf_tot_fus_land*FF_fus_land*Q_fus*S_wet_fus) + (Cf_tot_wing_land*FF_wing_land*Q_wing*S_wet_wing) + (Cf_tot_h_tail_land*FF_h_tail_land*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_land*FF_v_tail_land*Q_v_tail*S_wet_v_tail)) + CD_mis_land_brake) + CD0_flap;
+
+    %find operating point conditions
+    
+    W0 = aircraft.W0;
+    CL_cr = W0/(.5*rho_cr*V_cr^2*Sref);
+
+    %1500 ft/min climb
+
+    RC = 25; %ft/s
+    climb_angle = asin(RC/V_cr);
+    CL_climb = W0/(.5*rho_cr*V_cr^2*Sref*cos(climb_angle));
 
     %Create Drag Polars
     e_clean = .93; %from AVL analysis
@@ -200,22 +226,35 @@ function [CD0_clean, CD0_land, CD0_takeoff] = aerodynamicRefinement(aircraft)
     k_land = 1/(pi*AR*e_land);
     k_takeoff = 1/(pi*AR*e_takeoff);
 
-    CL_vec = linspace(-10, 10, 100);
+    CL_vec = linspace(-10, 10, 1000000);
+
+    Cr_index = find(CL_vec >= CL_cr, 1, 'first');
+    Climb_index = find(CL_vec >= CL_climb, 1, 'first');
 
     CD_clean_polar = CD0_clean + k_clean.*CL_vec.^2;
     CD_land_polar = CD0_land + k_land.*CL_vec.^2;
     CD_takeoff_polar = CD0_takeoff + k_takeoff.*CL_vec.^2;
+    CD_land_brake_polar = CD0_land_brake + k_land.*CL_vec.^2;
+
+    CD_cr = CD_clean_polar(Cr_index);
+    CD_climb = CD_clean_polar(Climb_index);
+
+    L_D_cr = CL_cr/CD_cr;
+    L_D_climb = CL_climb/CD_climb;
 
     figure()
     hold on
     plot(CD_clean_polar, CL_vec, 'LineWidth', 1)
+    plot(CD_cr, CL_cr, '-o', 'LineWidth', 3)
+    plot(CD_climb, CL_climb, '-o', 'LineWidth', 3)
     plot(CD_land_polar, CL_vec, 'LineWidth', 1)
     plot(CD_takeoff_polar, CL_vec, 'LineWidth', 1)
-    legend('Clean', 'Landing', 'Takeoff')
+    plot(CD_land_brake_polar, CL_vec, 'LineWidth', 1)
+    legend('Clean', 'Cruise Operating Point L/D = 11.4862', 'Climb Operating Point L/D = 11.5037', 'Landing', 'Takeoff', 'Landing with Air Brake')
     xlabel('CD')
     ylabel('CL')
     title('Component Build-Up Drag Polar')
 
-    
-
+    disp("L/D Cruise: " + L_D_cr)
+    disp("L/D Climb: " + L_D_climb)
 end

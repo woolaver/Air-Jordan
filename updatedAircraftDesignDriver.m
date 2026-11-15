@@ -79,15 +79,17 @@ disp(fuel_volume)
 %% Aerodynamic Refinement
 
 
-[CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated] = aerodynamicRefinement(aircraft);
+[CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated, CD0_land_brake_updated] = aerodynamicRefinement(aircraft);
 
 aircraft.CD0_clean = CD0_clean_updated;
 aircraft.CD0_land = CD0_land_updated;
 aircraft.CD0_takeoff = CD0_takeoff_updated;
+aircraft.CD0_land_brake = CD0_land_brake_updated;
 
 disp("Updated CD0_clean: " + CD0_clean_updated)
 disp("Updated CD0_land: " + CD0_land_updated)
 disp("Updated CD0_takeoff: " + CD0_takeoff_updated)
+disp("Updated CD0_land_brake: " + CD0_land_brake_updated)
 
 %% Cost Output based on Design Points
 
