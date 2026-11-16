@@ -144,7 +144,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     scatter(S_point, P_point, 'r', 'filled');
     hold on;
 
-
+    %{
     %% Aircraft cost meshgrid over plot - objective function
     S_mesh = linspace(min(S_sweep), max(S_sweep), 40);
     P_mesh = linspace(0, 3200, 40);          % start above 0: price eq. uses log10(SHP)
@@ -185,8 +185,10 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         'DisplayName', sprintf('Final Design Point (S=%.0f ft^2, P=%.0f hp)', S_discrete, P_avail_hp));
     
     %}
+
     legend([h(1:nC), h(nC+1), h_cost, h_rated, h_avail], 'Location', 'northeastoutside');
     hold off;
+    %}
  
 end
 

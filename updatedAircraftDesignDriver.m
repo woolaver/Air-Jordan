@@ -53,11 +53,15 @@ S_sweep = 500:10:4000;
 [P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
-em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
+
 
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    P_point, aircraft.W0_lb, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+    P_point, aircraft.W0, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+
+% calculate emergency range
+em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
+
 
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
