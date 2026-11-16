@@ -66,17 +66,17 @@ em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point)
 disp('New Weight Values (lbs):')
 disp(WeightStruct);
 
-battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
-battery_volume = WeightStruct.W_batt/battery_pack_density;
+aircraft.battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
+aircraft.battery_volume = WeightStruct.W_batt/aircraft.battery_pack_density;
 
 disp('Battery Volume (ft^3): ')
-disp(battery_volume)
+disp(aircraft.battery_volume)
 
-fuel_density = 760/16.018;% 100% Sustainable Aviation Fuel, what the RR550 turbogenerator is designed to run on, 760 kg/m^3 converted to lbs/ft^3
-fuel_volume = WeightStruct.Wf/fuel_density;
+aircraft.fuel_density = 760/16.018;% 100% Sustainable Aviation Fuel, what the RR550 turbogenerator is designed to run on, 760 kg/m^3 converted to lbs/ft^3
+aircraft.fuel_volume = WeightStruct.Wf/aircraft.fuel_density;
 
 disp('Fuel Volume (ft^3): ')
-disp(fuel_volume)
+disp(aircraft.fuel_volume)
 
 
 %Improved weight estimation
@@ -99,7 +99,7 @@ disp("Updated CD0_takeoff: " + CD0_takeoff_updated)
 disp("Updated CD0_land_brake: " + CD0_land_brake_updated)
 
 %% Cost Output based on Design Points
-
+%{
 [c] = aircraftcost(aircraft_data_01);
 
 disp("Total Cost = $" + c.tot_cost );
@@ -107,3 +107,5 @@ disp("COC", c.T1);
 disp("FOC", c.T2);
 disp("IOC", c.T3);
 disp("Aircraft Cost", c.T0);
+
+%}

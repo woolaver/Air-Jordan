@@ -12,9 +12,10 @@ aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data S
 aircraft.L_D = 11.4862; %From aircraftDesignDriver, comes from force balance at cruise
 aircraft.AR = 9; %From aircraftDesignDriver
 aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
-aircraft.alt_cr = 10000; %feet
+aircraft.alt_cr = 30000; %feet
 aircraft.climb_rate = 1500; % 1500 f/m climb
 aircraft.crew_weight = 1520; %lbs from RFP
+aircraft.num_crew = 8; % pilot + 7 passengers
 aircraft.baggage_weight = 240; % lbs from RFP
 aircraft.payload_weight = aircraft.crew_weight + aircraft.baggage_weight;
 
@@ -23,6 +24,7 @@ aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.V_cr = 225; %kts, from RFP
 aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
 aircraft.n_engine = 2; % number of turbogenerators
+aircraft.n_fuel_tanks = 1;
 
 % Wing / Aerodynamic Qualities
 aircraft.taperratio = 1;
@@ -30,11 +32,19 @@ aircraft.root_tip_ratio = 1;
 aircraft.wing_sweep = 0;
 %aircraft.wing_cont_surf_area = ; % wing mounted control surface area
 aircraft.wing_area = 733.3483; % ft^2, from design point
+aircraft.wing_span = sqrt(aircraft.wing_area * aircraft.AR);
 aircraft.wing_control_surf_area = 0.3 * aircraft.wing_area;
+aircraft.w_fuelwing = 0; % weight of fuel stored in wings, currently none
 
 % Tail and Horizontal Stabilizer Quantities
 aircraft.horiz_area = 154.8; % ft^2, horizontal tail area
 aircraft.vert_area = 100; % ft^2, vertical tail area
+aircraft.horiz_sweep = 4.76;
+aircraft.horiz_taper = 0.5;
+aircraft.horiz_AR = 4;
+aircraft.vert_sweep = 40; % deg
+aircraft.vert_taper = 0.8;
+
 
 % Load Factor
 aircraft.n_limit = 3.08;
@@ -50,6 +60,7 @@ aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
 
 % CAD System Results
 aircraft.S_fuselage = 931;
+aircraft.Lt = 17.5; % ft, dist from 1/4 MAC to horiz tail
 
 % Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
@@ -68,6 +79,7 @@ aircraft.DoD = b.soc_max - b.soc_min;
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
 aircraft.divert_time = 45; % 45 minutes of diversion time
+aircraft.reserve_battery_weight = 847; % lbs
 
 
 % preliminary sizing
