@@ -30,7 +30,10 @@ aircraft.Wto_W0 = Wto_W0;
 clc
 close all
 
-BlownWingAnalysis(aircraft);
+[takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft);
+
+disp("Takeoff Distance: " + takeoff_distance + " ft")
+disp("Landing Distance: " + landing_distance + " ft")
 
 %W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 

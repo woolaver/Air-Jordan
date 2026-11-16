@@ -1,4 +1,4 @@
-function BlownWingAnalysis(aircraft)
+function [takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft)
 
     % Higher fidelity analysis of blown wing takeoff and landing parameters
     % Using geometric estimates when needed, will be commented when used
@@ -84,8 +84,8 @@ function BlownWingAnalysis(aircraft)
 
     V_stall_flaps = 50; %ft/s, initial estimate
 
-    tol = 1e-3;
-    diff = 1;
+    tol = 1;
+    diff = 10;
 
     landing_weight = aircraft.Wland_W0 * aircraft.W0;
 
@@ -118,9 +118,9 @@ function BlownWingAnalysis(aircraft)
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
 
         if (V_stall_flaps > V_stall_calc)
-            V_stall_flaps = V_stall_flaps - .01;
+            V_stall_flaps = V_stall_flaps - .1;
         else
-            V_stall_flaps = V_stall_flaps + .01;
+            V_stall_flaps = V_stall_flaps + .1;
         end
     end
 
@@ -139,8 +139,8 @@ function BlownWingAnalysis(aircraft)
 
     V_stall_flaps = 50; %ft/s, initial estimate
 
-    tol = 1e-3;
-    diff = 1;
+    tol = 1;
+    diff = 10;
 
     takeoff_weight = aircraft.Wto_W0 * aircraft.W0;
 
@@ -173,9 +173,9 @@ function BlownWingAnalysis(aircraft)
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
 
         if (V_stall_flaps > V_stall_calc)
-            V_stall_flaps = V_stall_flaps - .01;
+            V_stall_flaps = V_stall_flaps - .1;
         else
-            V_stall_flaps = V_stall_flaps + .01;
+            V_stall_flaps = V_stall_flaps + .1;
         end
     end
 
@@ -192,8 +192,8 @@ function BlownWingAnalysis(aircraft)
 
     V_stall_clean = 80; %ft/s, initial estimate
 
-    tol = 1e-3;
-    diff = 1;
+    tol = 1;
+    diff = 10;
 
     delta_F_clean = 0;
 
@@ -231,9 +231,9 @@ function BlownWingAnalysis(aircraft)
         diff = abs(V_stall_clean - V_stall_calc)/V_stall_clean;
 
         if (V_stall_clean > V_stall_calc)
-            V_stall_clean = V_stall_clean - .01;
+            V_stall_clean = V_stall_clean - .1;
         else
-            V_stall_clean = V_stall_clean + .01;
+            V_stall_clean = V_stall_clean + .1;
         end
     end
 
@@ -338,7 +338,7 @@ function BlownWingAnalysis(aircraft)
     CL_vec = 0;
     alpha = deg2rad(0); %rad
     gamma = init_glide_path;
-    throttle = .25;
+    throttle = .15;
 
     %logic for controlling phase of landing
     approach = 1; %1 = true, 0 = false
@@ -364,6 +364,9 @@ function BlownWingAnalysis(aircraft)
     l_tail = aircraft.l_tail; %ft, estimated from beechcraft baron
     z_cg = aircraft.z_cg; %ft, estimated from beechcraft baron
     z_mlg = aircraft.z_mlg; %ft, main landing gear on the ground
+
+    K_f = .38;
+    Cm_alpha_fus = K_f*(aircraft.fuselage_width^2*aircraft.fuselage_length)/(S*c_bar);
 
     while V > 0
         [delta_C_j, delta_j, T_c_prime] = calc_Tc(V(i), eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
@@ -396,7 +399,7 @@ function BlownWingAnalysis(aircraft)
 
 
             if(h(i+1) < 15)
-                throttle = .45;
+                throttle = .7;
                 approach = 0;
                 flare = 1;
             end
@@ -423,7 +426,7 @@ function BlownWingAnalysis(aircraft)
             V_dot = (-X - W_land*sin(gamma(i)))/m_land;
             
             if(alpha(i) < alpha_target)
-                Cm_wb = Cm_wb_0 - .015*rad2deg(alpha(i)); %estimated from google
+                Cm_wb = Cm_wb_0 - Cm_alpha_fus*alpha(i); %estimated from google
     
                 if(CL_tail > -2)
                     CL_tail = CL_tail - CL_tail_dot*dt;
@@ -544,7 +547,9 @@ function BlownWingAnalysis(aircraft)
     ylabel('CL')
     xlabel('Speed (ft/s)')
 
-    disp("Blown Wing Landing Distance: " + s(end) + " ft")
+    landing_distance = s(end);
+
+    disp("Blown Wing Landing Distance: " + landing_distance + " ft")
 
     %% Integrate Takeoff 
     T0 = (2*rho*Ad)^(1/3)*(eta_a*P_sh)^(2/3); %Zero-velocity thrust
@@ -579,6 +584,9 @@ function BlownWingAnalysis(aircraft)
     z_mlg = aircraft.z_mlg; %ft, main landing gear on the ground
     CD0_takeoff = aircraft.CD0_takeoff;
     e_takeoff = aircraft.e_takeoff;
+
+    K_f = .38;
+    Cm_alpha_fus = K_f*(aircraft.fuselage_width^2*aircraft.fuselage_length)/(S*c_bar);
     
     %initialize arrays for storage
     i = 1;
@@ -587,7 +595,7 @@ function BlownWingAnalysis(aircraft)
     t = 0;
     V = V0;
     CL_vec = 0;
-    alpha = aircraft.wing_incidence; %deg
+    alpha = deg2rad(aircraft.wing_incidence); %deg
     gamma = deg2rad(0);
 
     V_stall = sqrt(2*W/(rho*S*CL_max));
@@ -602,10 +610,10 @@ function BlownWingAnalysis(aircraft)
     
         if(climb == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*alpha(i);
-            A0 = .1856 + .0334*delta_F + .0667*alpha(i);
-            A1 = .0121*delta_j - .0085*alpha(i) + .0426;
-            A2 = .0140*delta_j + .0226*alpha(i) + .1407;
+            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
+            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
@@ -631,10 +639,10 @@ function BlownWingAnalysis(aircraft)
     
         if(rotate == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*alpha(i);
-            A0 = .1856 + .0334*delta_F + .0667*alpha(i);
-            A1 = .0121*delta_j - .0085*alpha(i) + .0426;
-            A2 = .0140*delta_j + .0226*alpha(i) + .1407;
+            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
+            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
@@ -647,8 +655,8 @@ function BlownWingAnalysis(aircraft)
     
             V_dot = (-X - mu*(W - L))/m;
     
-            if (alpha(i) < alpha_target)
-                Cm_wb = Cm_wb_0 - .015*alpha(i); %estimated from google
+            if (rad2deg(alpha(i)) < alpha_target)
+                Cm_wb = Cm_wb_0 + Cm_alpha_fus*rad2deg(alpha(i)); %estimated from google
     
                 if(CL_tail > -2)
                     CL_tail = CL_tail - CL_tail_dot*dt;
@@ -672,9 +680,9 @@ function BlownWingAnalysis(aircraft)
                 %no change in height during rotation
                 h(i+1) = h(i);
                 CL_vec(i+1) = CL;
-                gamma(i+1) = gamma(i);
+                gamma(i+1) = (L - W*cos(gamma(i)))/(m*V(i+1));
     
-                if (alpha(i+1) >= alpha_target)
+                if (rad2deg(alpha(i+1)) >= alpha_target)
                     rotate = 0;
                     climb = 1;
                 end
@@ -682,10 +690,10 @@ function BlownWingAnalysis(aircraft)
     
         if (roll == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*alpha(i);
-            A0 = .1856 + .0334*delta_F + .0667*alpha(i);
-            A1 = .0121*delta_j - .0085*alpha(i) + .0426;
-            A2 = .0140*delta_j + .0226*alpha(i) + .1407;
+            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
+            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
+            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
@@ -770,7 +778,7 @@ function BlownWingAnalysis(aircraft)
     xlabel('Time (s)')
     
     figure()
-    plot(t, alpha, 'LineWidth', 1, 'Color', 'Blue')
+    plot(t, rad2deg(alpha), 'LineWidth', 1, 'Color', 'Blue')
     title('Takeoff Roll Angle of Attack vs. Time')
     ylabel('Angle of Attack (deg)')
     xlabel('Time (s)')
@@ -787,7 +795,10 @@ function BlownWingAnalysis(aircraft)
     ylabel('CL')
     xlabel('Speed (ft/s)')
 
-    disp("Blown Wing Takeoff Distance: " + s(end) + " ft")
+    takeoff_distance = s(end);
+
+    disp("Blown Wing Takeoff Distance: " + takeoff_distance + " ft")
+
 
     %}
 end

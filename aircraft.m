@@ -29,7 +29,7 @@ aircraft.taperratio = 1;
 aircraft.root_tip_ratio = 1;
 aircraft.wing_sweep = 0;
 %aircraft.wing_cont_surf_area = ; % wing mounted control surface area
-aircraft.wing_area = 649; % ft^2, from design point
+aircraft.wing_area = 733.3483; % ft^2, from design point
 aircraft.wing_control_surf_area = 0.3 * aircraft.wing_area;
 
 % Tail and Horizontal Stabilizer Quantities
@@ -72,7 +72,7 @@ aircraft.divert_time = 45; % 45 minutes of diversion time
 
 % preliminary sizing
 
-aircraft.CD0_clean = .024735; %from aerodynamicRefinement.m
+aircraft.CD0_clean = .025665; %from aerodynamicRefinement.m
 aircraft.CLmax_clean = 1.5;
 aircraft.CLmax_to = 7;
 aircraft.CLmax_climb = 3.472;
@@ -80,8 +80,8 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 
 %Blown wing analysis properties
-aircraft.W0 = 16130; %lbs
-aircraft.prop_diameter = 5.5; %ft, initial estimate from blown wing analysis
+aircraft.W0 = 16207; %lbs
+aircraft.prop_diameter = 7; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
@@ -100,14 +100,14 @@ aircraft.CL_tail = -.5; %initial CL_tail
 aircraft.CL_tail_dot = .5; %random estimate
 aircraft.Iyy = 30000; %slug*ft^2, estimate twin engine turboprop
 aircraft.Cm_wb_0 = .05; %estimate from google
-aircraft.S = 728.6425; % from AR of 9 with 22.1 wing loading
-aircraft.c_bar = 8.9978; %from AR of 9
+aircraft.S = 733.3484; % from AR of 9 with 22.1 wing loading
+aircraft.c_bar = 9.0268; %from AR of 9
 aircraft.x_mlg = 18.38; %ft, from CAD as of 11/7
 aircraft.x_cg = 16.5; %ft
 aircraft.x_acw = 11.72 + .25*aircraft.c_bar; %assuming ac is at quarter chord
 aircraft.Sh = 200; %Marley Estimation
-aircraft.l_tail = 30.62; %ft, from PDR
-aircraft.z_cg = 11.591207/2; %6.9985/2 + 3.49 + 1; ft, estimating center of fuselage
+aircraft.l_tail = 27; %ft, from PDR
+aircraft.z_cg = 11.591207/2; %estimating half the distance from top of wing to bottom of landing gear
 aircraft.z_mlg = 0; %ft, on the ground
 aircraft.CL_max_stall = 8.4962; %from blown wing analysis 
 aircraft.wing_incidence = 2; %deg, from PDR slides
@@ -131,14 +131,17 @@ aircraft.Wto_W0 = 0;
 aircraft.S_wet_fuselage = 517.96; %ft^2 from CAD as of 11/7
 aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
 aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
-aircraft.wing_MAC = 8.9978; %from updated AR = 9
-aircraft.fuselage_length = 50; %ft, from CAD drawings from PDR
+aircraft.wing_MAC = 9.0268; %from updated AR = 9
+aircraft.fuselage_length = 34.5625; %ft, from CAD drawings from PDR
 aircraft.h_tail_MAC = 6.45; %ft, from PDR report
 aircraft.v_tail_MAC = 9.17; %ft, from PDR report
 aircraft.fuselage_height = 6.9985; %from PDR drawings
 aircraft.fuselage_width = 5.67; %from PDR drawings
 aircraft.V_land = 40; %kts, estimation for now, needs to come from landing analysis
 aircraft.V_takeoff = 40; %kts, estimation for now, needs to come from takeoff analysis
+aircraft.CD0_land = .071465;
+aircraft.CD0_land_brake = .2591;
+aircraft.CD0_takeoff = .053412;
 
 
 end

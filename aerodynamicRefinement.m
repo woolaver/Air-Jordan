@@ -163,13 +163,13 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     u_fus = deg2rad(19.9); %from CAD as of 11/7
     D_q_fus = 3.83*u_fus^(2.5)*A_fus_max;
 
-    A_gear_struts = 31.043/4; %from CAD as of 11/7, supposed to be the aft facing area of the struts, don't know how to actually get this so just dividing by 4 for now
+    A_gear_struts = 30/8; %from CAD as of 11/7, supposed to be the aft facing area of the struts, don't know how to actually get this so just dividing by 4 for now
     D_q_struts = (.139 + .419*(M_cr - .161)^2)*A_gear_struts;
 
     D_q_tires = (.25*(6.824319/2) + .15*(6.824319/2))*3; %area from CAD, divide by 2 to get frontal area, multiply by 3 to get all three wheel pairs
     D_q_landing_gear = 3*(1.17*(0.8180572/2)); %landing gear shocks estimated as round struts with Re < 3*10^5, flying slow so should be accurate, divide area by 2 to get frontal area and multiply by 3 for 3 landing gears
     
-    D_q_air_scoop = 1.5*(1);
+    D_q_air_scoop = 1.5*(.5);
 
     Ad = aircraft.num_propeller*(pi*aircraft.prop_diameter^2)/4;
     disk_area_ratio = Ad/Sref;
@@ -192,14 +192,15 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
 
     CD0_flap = F_flap*(Cf/C)*(S_flapped/Sref)*(delta_flap - 10);
     
-    %Trim Drag NEED TO DO
+    %Trim Drag
+    CD_trim = .0026;
 
     Cf_total_clean = (Cf_tot_fus + Cf_tot_wing + Cf_tot_h_tail + Cf_tot_v_tail);
 
     disp("Cf_total_clean: " + Cf_total_clean)
 
     Leakage_factor = 1.075; %from Cinar, prop plane average
-    CD0_clean = Leakage_factor*((1/Sref)*((Cf_tot_fus*FF_fus*Q_fus*S_wet_fus) + (Cf_tot_wing*FF_wing*Q_wing*S_wet_wing) + (Cf_tot_h_tail*FF_h_tail*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail*FF_v_tail*Q_v_tail*S_wet_v_tail)) + CD_mis_clean);
+    CD0_clean = Leakage_factor*((1/Sref)*((Cf_tot_fus*FF_fus*Q_fus*S_wet_fus) + (Cf_tot_wing*FF_wing*Q_wing*S_wet_wing) + (Cf_tot_h_tail*FF_h_tail*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail*FF_v_tail*Q_v_tail*S_wet_v_tail)) + CD_mis_clean) + CD_trim;
     CD0_land = Leakage_factor*((1/Sref)*((Cf_tot_fus_land*FF_fus_land*Q_fus*S_wet_fus) + (Cf_tot_wing_land*FF_wing_land*Q_wing*S_wet_wing) + (Cf_tot_h_tail_land*FF_h_tail_land*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_land*FF_v_tail_land*Q_v_tail*S_wet_v_tail)) + CD_mis_land) + CD0_flap;
     CD0_takeoff = Leakage_factor*((1/Sref)*((Cf_tot_fus_takeoff*FF_fus_takeoff*Q_fus*S_wet_fus) + (Cf_tot_wing_takeoff*FF_wing_takeoff*Q_wing*S_wet_wing) + (Cf_tot_h_tail_takeoff*FF_h_tail_takeoff*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_takeoff*FF_v_tail_takeoff*Q_v_tail*S_wet_v_tail)) + CD_mis_takeoff) + CD0_flap;
     CD0_land_brake = Leakage_factor*((1/Sref)*((Cf_tot_fus_land*FF_fus_land*Q_fus*S_wet_fus) + (Cf_tot_wing_land*FF_wing_land*Q_wing*S_wet_wing) + (Cf_tot_h_tail_land*FF_h_tail_land*Q_h_tail*S_wet_h_tail) + (Cf_tot_v_tail_land*FF_v_tail_land*Q_v_tail*S_wet_v_tail)) + CD_mis_land_brake) + CD0_flap;
@@ -250,7 +251,7 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     plot(CD_land_polar, CL_vec, 'LineWidth', 1)
     plot(CD_takeoff_polar, CL_vec, 'LineWidth', 1)
     plot(CD_land_brake_polar, CL_vec, 'LineWidth', 1)
-    legend('Clean', 'Cruise Operating Point L/D = 11.4862', 'Climb Operating Point L/D = 11.5037', 'Landing', 'Takeoff', 'Landing with Air Brake')
+    legend('Clean', 'Cruise Operating Point L/D = 11.1816', 'Climb Operating Point L/D = 11.1988', 'Landing', 'Takeoff', 'Landing with Air Brake')
     xlabel('CD')
     ylabel('CL')
     title('Component Build-Up Drag Polar')
