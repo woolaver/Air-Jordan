@@ -3,79 +3,83 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     % Inputs: P [hp], W0 [lb], aircraft struct
     
     % constants from struct
-    c   = aircraft.specific_fuel_consumption_cruise;   % [lb/(hp*h)]
-    eta = aircraft.prop_efficiency;
-    S = aircraft.wing_area;
-    g = 32.174; % [ft/s^2]
-    V_cr = aircraft.V_cr;
+    c    = aircraft.specific_fuel_consumption_cruise;   % lb/(hp*h)
+    c_ft = c/(550*3600);                                 % 1/ft  (lb/(ft*lbf/s * s))
+    eta  = aircraft.prop_efficiency;
+    S    = aircraft.wing_area;
+    g    = 32.174;
+    dT   = aircraft.dT_K;                                % ISA + 18 F = +10 K
+    h_cr = aircraft.alt_cr;                              % ft
+    V_cr = aircraft.V_cr*1.688;                          % kt -> ft/s (TAS)
+
     CD0_clean = aircraft.CD0_clean;
-    CD0_climb = CD0_clean + .0325;
-    CD0_climb_gear = CD0_clean + .0325 + .02;    
-    e_clean = 0.825;
-    e_climb = 0.8;
-    k_clean = 1/(pi*e_clean*aircraft.AR);
-    k_climb = 1/(pi*e_climb*aircraft.AR);
-    % taxi
-    W1_W0 = 1 - c*(15/60)*(0.05*P/W0);       % 15 min at 5% power
-    W1    = W1_W0*W0;
-    %takeoff
-    W2_W1 = 1 - c*(1/60)*(P/W1);             % 1 min at full power
-    W2 = W2_W1 * W1;
-    % climb
-    c_ft = c / (550 * 3600);
-    Vclimb = linspace(50, 225, 100);
-    h = linspace(0, 10000, 100);
-    for i = 1:length(Vclimb) - 1
-        d_he = h(i) + (Vclimb(i+1)^2 - Vclimb(i)^2) / 2*g;
-        rhoi = density_isa_offset(h(i), 18);
-        CL = 2*W2/(rhoi*Vclimb(i)^2*S);
-        CD = CD0_climb + k_climb*CL^2;
-        D = 0.5*rhoi*Vclimb(i)^2*S*CD;
-        T = eta*P*550/Vclimb(i);
-        W3_W2 = exp((-c_ft * d_he) / (eta * (1 - D / T)));
-        W3 = W3_W2 * W2;
+    CD0_climb = CD0_clean + .0325;                       % climb flaps (gear up)
+    e_clean   = aircraft.e_cr;
+    e_climb   = 0.8*e_clean/0.825;                       % keep original climb/clean ratio
+    k_clean   = 1/(pi*e_clean*aircraft.AR);
+    k_climb   = 1/(pi*e_climb*aircraft.AR);
+
+    % taxi (15 min at 5% power) and takeoff (1 min at full power)
+    W1_W0 = 1 - c*(15/60)*(0.05*P/W0);   W1 = W1_W0*W0;
+    W2_W1 = 1 - c*(1/60)*(P/W1);         W2 = W2_W1*W1;
+
+    % climb: energy method, clean config, ~160 kt climb, then accelerate to V_cr at h_cr
+    n   = 100;
+    hv  = linspace(0, h_cr, n);
+    V_y = min(160*1.688, V_cr);                       % climb speed [ft/s]
+    Vv  = linspace(min(80*1.688, V_y), V_y, n);       % accelerate to climb speed over the climb
+    W   = W2;  climb_ok = true;
+    for i = 1:n-1
+        d_he = (hv(i+1) - hv(i)) + (Vv(i+1)^2 - Vv(i)^2)/(2*g);
+        hm = 0.5*(hv(i) + hv(i+1));  Vm = 0.5*(Vv(i) + Vv(i+1));
+        rho = density_isa_offset(hm, dT);
+        CL  = 2*W/(rho*Vm^2*S);
+        D   = 0.5*rho*Vm^2*S*(CD0_clean + k_clean*CL^2);
+        T   = eta*P*550/Vm;
+        xs  = 1 - D/T;                                % specific excess power fraction
+        if xs < 0.1, xs = 0.1; climb_ok = false; end  % guard: weak climb -> flag
+        W   = W*exp(-c_ft*d_he/(eta*xs));
     end
-    % cruise segment 
-    R_ft  = aircraft.R_fuel*6076;            % fuel cruise distance [ft]
-    n_segment = 200;
-    R_seg = R_ft / n_segment;
-    rho_cruise = density_isa_offset(10000, 18);
-    Wcr = W3;
-    for i = 1:n_segment
-        CL = 2 * Wcr / (rho_cruise * V_cr^2 * S);
-        CD = CD0_clean + k_clean * CL.^2;
-        L_D = CL / CD;
-        W4_W3(i) = exp(-R_seg * c_ft / (eta * L_D));
-        Wcr = W4_W3(i) * Wcr;
+    % level acceleration at h_cr from V_y to V_cr
+    rho = density_isa_offset(h_cr, dT);  Vm = 0.5*(V_y + V_cr);
+    CL  = 2*W/(rho*Vm^2*S);
+    D   = 0.5*rho*Vm^2*S*(CD0_clean + k_clean*CL^2);  T = eta*P*550/Vm;
+    xs  = 1 - D/T;  if xs < 0.1, xs = 0.1; climb_ok = false; end
+    W   = W*exp(-c_ft*((V_cr^2 - V_y^2)/(2*g))/(eta*xs));
+    if ~climb_ok, warning('Climb/acceleration power marginal at %.0f ft (D/T > 0.9)', h_cr); end
+    W3 = W;  W3_W2 = W3/W2;
+
+    % fuel cruise segment (R_fuel at h_cr, V_cr)
+    R_seg = aircraft.R_fuel*6076/200;
+    rho_cr = density_isa_offset(h_cr, dT);
+    W = W3;
+    for i = 1:200
+        CL  = 2*W/(rho_cr*V_cr^2*S);
+        L_D = CL/(CD0_clean + k_clean*CL^2);
+        W   = W*exp(-R_seg*c_ft/(eta*L_D));
     end
-    W4_W3 = W4_W3(end) ^ 200;
+    W4 = W;  W4_W3 = W4/W3;
+
     % descent
-    W5_W4 = 0.992; % historical value
-    % loiter
-    W5 = W5_W4 * W4_W3 * Wcr;
-    rho_loit = density_isa_offset(5000, 18);
-    CL_loit = sqrt(3 * CD0_clean/k_clean);
-    CD_loit = CD0_clean + k_clean * CL_loit^2;
-    LD_loit = CL_loit^(3/2) / CD_loit;
-    V_loit = sqrt(2 * W5 / (rho_loit * S*CL_loit));
-    E_loit = aircraft.divert_time;
-    W6_W5 = exp(-(E_loit*60 * c_ft * V_loit) / (eta * LD_loit));
-    
+    W5_W4 = 0.992;  W5 = W5_W4*W4;
+
+    % loiter: 45-min IFR reserve (91.167 / 135.223) at 5,000 ft, max-endurance CL
+    rho_loit = density_isa_offset(5000, dT);
+    CL_loit  = sqrt(3*CD0_clean/k_clean);
+    LD_loit  = CL_loit/(CD0_clean + k_clean*CL_loit^2);
+    V_loit   = sqrt(2*W5/(rho_loit*S*CL_loit));
+    E_loit   = aircraft.divert_time*60;                     % s
+    W6_W5    = exp(-E_loit*c_ft*V_loit/(eta*LD_loit));
+
     % landing
-    W7_W6 = 0.992; % historical value
+    W7_W6 = 0.992;
 
     % total
     W7_W0 = W7_W6*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
     Wf_W0 = 1 - W7_W0;
     Wf    = Wf_W0*W0;
 
-    fuelfrac.taxi = W1_W0;
-    fuelfrac.takeoff = W2_W1;
-    fuelfrac.climb = W3_W2;
-    fuelfrac.cruise = W4_W3;
-    fuelfrac.descent = W5_W4;
-    fuelfrac.loiter = W6_W5;
-    fuelfrac.landing = W7_W6;
-    fuelfrac.total = Wf_W0;
-
+    fuelfrac = struct('taxi',W1_W0,'takeoff',W2_W1,'climb',W3_W2,'cruise',W4_W3, ...
+                      'descent',W5_W4,'loiter',W6_W5,'landing',W7_W6,'total',Wf_W0, ...
+                      'L_D_cruise',L_D,'CL_cruise',2*W4/(rho_cr*V_cr^2*S));
 end
