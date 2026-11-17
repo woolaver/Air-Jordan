@@ -12,6 +12,7 @@ aircraft.electric_power_weight = (150 + 480)*2.205; %3118 kg to lbs, From Data S
 aircraft.L_D = 11.4862; %From aircraftDesignDriver, comes from force balance at cruise
 aircraft.AR = 9; %From aircraftDesignDriver
 aircraft.W_S = 22.1; %lbs/ft, main restriction is landing from blown wing analysis
+aircraft.P_W = 0.122;
 aircraft.alt_cr = 30000; %feet
 aircraft.climb_rate = 1500; % 1500 f/m climb
 aircraft.crew_weight = 1520; %lbs from RFP
@@ -35,15 +36,19 @@ aircraft.wing_area = 733.3483; % ft^2, from design point
 aircraft.wing_span = sqrt(aircraft.wing_area * aircraft.AR);
 aircraft.wing_control_surf_area = 0.3 * aircraft.wing_area;
 aircraft.w_fuelwing = 0; % weight of fuel stored in wings, currently none
+aircraft.wing_tc = .15; % NLF-0115 airfoil
 
 % Tail and Horizontal Stabilizer Quantities
-aircraft.horiz_area = 154.8; % ft^2, horizontal tail area
+aircraft.horiz_area = 145.8; % ft^2, horizontal tail area
 aircraft.vert_area = 100; % ft^2, vertical tail area
 aircraft.horiz_sweep = 4.76;
 aircraft.horiz_taper = 0.5;
 aircraft.horiz_AR = 4;
 aircraft.vert_sweep = 40; % deg
 aircraft.vert_taper = 0.8;
+aircraft.vert_AR = 1.2;
+aircraft.vert_tc = 0.12; % NACA 0012
+aircraft.horiz_tc = 0.12; % NACA 0012
 
 
 % Load Factor
@@ -66,7 +71,7 @@ aircraft.Lt = 17.5; % ft, dist from 1/4 MAC to horiz tail
 aircraft.e_range = 200; %nmi, 200 required
 aircraft.electric_efficiency = .9032; %combined efficiencies of battery, motor, and wiring combined
 aircraft.battery.e_cell_Whkg = 505;    % [Wh/kg] cell level (
-aircraft.battery.pack_factor = 0.70;   % [-] pack/cell mass: BMS, structure, cooling  
+aircraft.battery.pack_factor = 0.9;   % [-] pack/cell energy ratio: BMS, structure, cooling  
 aircraft.battery.soc_max     = 0.95;   % [-] max state of charge                                        
 aircraft.battery.soc_min     = 0.10;   % [-] min state of charge                                     
 aircraft.battery.fade        = 0.90;   % [-] end-of-life capacity 

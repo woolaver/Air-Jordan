@@ -48,7 +48,7 @@ p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CL
     'prop_efficiency', aircraft.prop_efficiency,'Wcr_W0', aircraft.Wcr_W0,'Wclimb_W0', aircraft.Wclimb_W0, ...
     'Wce_W0',aircraft.Wce_W0,'Wland_W0',aircraft.Wland_W0,'Pcr_P0',aircraft.Pcr_P0,'Neng',aircraft.num_propeller,'alt_cr',aircraft.alt_cr, 'design_margin', aircraft.design_margin);
 
-S_sweep = 500:10:4000;
+S_sweep = 200:10:1500;
 
 [P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft);
 disp("P-S design power: " + P_point + " hp");
