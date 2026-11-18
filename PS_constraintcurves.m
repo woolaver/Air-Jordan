@@ -1,13 +1,12 @@
-function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft)
+function[P_point, S_point, aircraft] = PS_constraintcurves(S_sweep, W0, aircraft)
 
-   %{ 
+       %{ 
         require_fields(aircraft, {'AR','Cf_clean','CLmax_to','Wcr_W0','Wce_W0','Wclimb_W0', ...
         'Wland_W0','Pcr_P0','prop_efficiency','alt_cr','V_cr','rho_takeoff', ...
         'num_propeller','design_margin', 'rho_em', 'Wem_W0', 'G_em', 'Hp'}, mfilename); 
         %}
     
-    W0_guess = aircraft.W0;                
-    S_point  = W0_guess / W_S_point;       
+    W0_guess = aircraft.W0;                   
     S_sweep  = S_sweep(:);
     
     env.rho    = aircraft.rho_takeoff;     % same takeoff/landing density as preliminary_Sizing
@@ -24,7 +23,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
     env.TOP = (-b + sqrt(b^2 + 4*a*env.sTOG))/(2*a);
     
     env.sland   = 300   ;
-    env.WS_land = (env.sland/80)*(env.rho/env.rho_sl)*aircraft.CLmax_to/aircraft.Wland_W0;
+    env.WS_land = (env.sland/80)*(env.rho/env.rho_sl)*aircraft.CLmax_land/aircraft.Wland_W0;
     
     
     names = {'Takeoff', 'Cruise', 'Ceiling', 'Takeoff Climb', 'Critical Loss of Thrust', 'Balked Landing Climb', 'Maneuever', 'Emergency Range'};
@@ -51,7 +50,7 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
             Pk = P_prev(k);
             ok = false;
             for it = 1:100
-                [W0, weightstruct] = weightIterationEstimate_corrected(Pk, W0, S, W_S_point, aircraft.prop_efficiency, aircraft);
+                [W0, weightstruct] = weightIterationEstimate_corrected(Pk, W0, S, aircraft.W_S, aircraft.prop_efficiency, aircraft);
                % disp("Pk = " + Pk)
               %  disp("W0 iteration = " + W0)
                 if ~isfinite(W0), break, end            
@@ -75,38 +74,47 @@ function[P_point, S_point, out] = PS_constraintcurves(S_sweep, W0, W_S_point, ai
     end
 
     % landing
-    [Penv, kmax] = max(P, [], 2);                       
-    W0env = Wc(sub2ind(size(Wc), (1:nS)', kmax));
-    WS_of_S = W0env./S_sweep;
-    m = isfinite(WS_of_S);
-    if nnz(m) >= 2
-        S_land = interp1(WS_of_S(m), S_sweep(m), env.WS_land, 'linear', 'extrap');
-    else
-        S_land = NaN;
+    P_grid = linspace(0, 3500, 40)';
+    S_landcurve = nan(size(P_grid));
+    for i = 1:numel(P_grid)
+        f = @(S) W0_of_PS(P_grid(i), S, aircraft.W0, aircraft)/S - env.WS_land;
+        try
+            S_landcurve(i) = fzero(f, [S_sweep(1) S_sweep(end)]);
+        catch
+            % no sign change in the sweep range, leave NaN
+        end
     end
-
     % find intial design point
     
-    takeoff_idx = find(strcmp(names, 'Takeoff'));
+    % design point: landing curve meets the constraint envelope
+    [Penv, ~] = max(P, [], 2);
+    m = isfinite(S_landcurve);
 
-    P_takeoff = interp1( ...
-        S_sweep, P(:,takeoff_idx), S_land, 'linear');
+    Penv_at = interp1(S_sweep, Penv, S_landcurve(m), 'linear');   % envelope power at each landing-curve S
+    d = Penv_at - P_grid(m);                                      % sign change = crossing
+    j = find(d(1:end-1).*d(2:end) <= 0, 1);
 
-    S_design = S_land * aircraft.design_margin;
-    P_design = P_takeoff * (aircraft.design_margin);
+    if isempty(j)
+        warning('Landing curve never crosses the constraint envelope in this sweep.');
+        S_point = NaN;  P_point = NaN;
+    else
+        Sm = S_landcurve(m);  Pm = P_grid(m);
+        t  = d(j)/(d(j) - d(j+1));
+        S_design = Sm(j) + t*(Sm(j+1) - Sm(j));
+        P_design = Pm(j) + t*(Pm(j+1) - Pm(j));
+        S_point  = S_design*(1 + aircraft.design_margin);
+        P_point  = P_design*(1 + aircraft.design_margin);
+    end
 
-    P_point = P_design;
-    S_point = S_design;
+    aircraft.P_point = P_point;
+    aircraft.S_point = S_point;
 
-
-    out = struct('S',S_sweep, 'P',P, 'W0',Wc, 'names',{names}, ...
-        'S_land',S_land, 'P_env',Penv, 'P_point', P_design, 'S_point', S_design);
+   
     %{
 disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         " hp (governed by " + names{kd} + ")")
     %}
-    disp("Landing limit: minimum S = " + S_land + " ft^2")
-
+ %   disp("Landing limit: minimum S = " + S_land + " ft^2")
 
     
     
@@ -118,22 +126,23 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     for k = 1:nC
         h(k) = plot(S_sweep, P(:,k), 'LineWidth', 1.5, 'DisplayName', names{k});
     end
-    ytop = 1.3*max(Penv, [], 'omitnan');
-    if isfinite(S_land)
-        h(nC+1) = xline(S_land, 'LineWidth', 1.5, 'Color', 'black', ...
-            'DisplayName', 'Landing (min S)');
-        f = isfinite(Penv) & S_sweep >= S_land;         % feasible region shading
-        if nnz(f) >= 2
-            xs = S_sweep(f);  ys = Penv(f);
-            fill([xs; flipud(xs)], [ytop*ones(size(xs)); flipud(ys)], ...
-                [0.6 0.85 0.6], 'FaceAlpha', 0.35, 'EdgeColor', 'none', ...
-                'HandleVisibility', 'off');
-        end
-    else
-        h(nC+1) = plot(nan, nan, 'DisplayName', 'Landing (n/a)');
+    m = isfinite(S_landcurve);
+    h(nC + 1) = plot(S_landcurve(m), P_grid(m), 'k', 'LineWidth', 1.5, ...
+        'DisplayName', 'Landing');
+
+    % feasible region: above the envelope, to the right of the landing curve
+    [Su, iu] = unique(S_landcurve(m));
+    Pu = P_grid(m);  
+    Pu = Pu(iu);
+    P_up = interp1(Su, Pu, S_sweep, 'linear', NaN);
+    f = isfinite(Penv) & isfinite(P_up) & P_up > Penv;
+    if nnz(f) >= 2
+        xs = S_sweep(f);
+        fill([xs; flipud(xs)], [P_up(f); flipud(Penv(f))], [0.6 0.85 0.6], ...
+            'FaceAlpha', 0.35, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     end
   
-    ylim([0 3000]);
+    ylim([0 3500]);
     xlim([S_sweep(1) S_sweep(end)]);
     
     xlabel('Wing Area, S (ft^2)');
@@ -186,18 +195,20 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
     
     %}
 
-    legend([h(1:nC), h(nC+1), h_cost, h_rated, h_avail], 'Location', 'northeastoutside');
-    hold off;
+   
     %}
- 
+    legend([h(1:nC+1)], 'Location', 'northeastoutside');
+    hold off;
+
+
 end
 
 
-function val = aircraft_cost_at_point(P, S, W0_guess, W_S_point, aircraft)
+function val = aircraft_cost_at_point(P, S, W0_guess, W_S, aircraft)
     % Aircraft acquisition cost [$] at one (P [hp], S [ft^2]) point.
     val = NaN;
     try
-        [W0_pt, Ws] = weightIterationEstimate_corrected(P, W0_guess, S, W_S_point, ...
+        [W0_pt, Ws] = weightIterationEstimate_corrected(P, W0_guess, S, aircraft.W_S, ...
             aircraft.prop_efficiency, aircraft);
         if ~isfinite(W0_pt), return, end
         c   = aircraftcost(set_sizing_results(aircraft, P, W0_pt, Ws));
@@ -242,7 +253,7 @@ function pw = pw_all(W0, S, aircraft, env)
         climb_pw(0.01, aircraft.CLmax_to, 1.2, eta, aircraft.Wclimb_W0, env.rho_400, env.rho_sl, CD0_cfg, k_to,   WS);
     pw(6) = climb_pw(0.03, 5.0,               1.3, eta, aircraft.Wland_W0,  env.rho,     env.rho_sl, CD0_cfg, k_land, WS);
     
-    n = 1/cos(deg2rad(60));                                                     % maneuver
+    n = 1/cos(deg2rad(25));                                                     % maneuver
     pw(7) = (env.V_cr/(550*eta))*(env.q_cr*CD0/WS_cr + WS_cr*n^2*k_clean/env.q_cr) ...
         *(aircraft.Wcr_W0/aircraft.Pcr_P0);
     CL_br = sqrt(CD0/k_clean);
@@ -254,4 +265,16 @@ function pw = climb_pw(G, CLmax, ks, eta, Wfrac, rho_c, rho_sl, CD0_cfg, k, WS)
     CL = CLmax/ks^2;                       % CL actually flown at V = ks*Vstall
     LD = CL/(CD0_cfg + k*CL^2);            % L/D at that CL
     pw = Wfrac^(3/2)*sqrt(WS)*(G + 1/LD)/(18.97*eta*sqrt(rho_c/rho_sl)*sqrt(CL));
+end
+
+function W0 = W0_of_PS(P, S, W0_seed, aircraft)
+W0 = W0_seed;
+for j = 1:50
+    W0_new = weightIterationEstimate_corrected(P, W0, S, aircraft.W_S, ...
+        aircraft.prop_efficiency, aircraft);
+    if ~isfinite(W0_new), W0 = NaN; return, end
+    if abs(W0_new - W0) < 0.1, W0 = W0_new; return, end
+    W0 = 0.5*W0 + 0.5*W0_new;
+end
+W0 = NaN;
 end

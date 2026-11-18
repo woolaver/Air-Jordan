@@ -14,7 +14,7 @@ aircraft = aircraft();
 
 [W0, Wcr_W0, Wl_W0, Wclimb_W0, Wce_W0, Wto_W0] = weight_Estimate_Iteration_old(aircraft);
 
-%aircraft.W0 = W0;
+aircraft.W0 = W0;
 aircraft.Wcr_W0 = Wcr_W0;
 aircraft.Wland_W0 = Wl_W0;
 aircraft.Wclimb_W0 = Wclimb_W0;
@@ -23,14 +23,12 @@ aircraft.Wto_W0 = Wto_W0;
 
 %% Preliminary Sizing Estimate
 
-[W_S_point, P_W_point] = preliminary_Sizing(aircraft, aircraft.design_margin);
+[W_S_point, P_W_point, aircraft] = preliminary_Sizing(aircraft, aircraft.design_margin);
 
 %% Blown Wing Analysis
 
-clc
-close all
 
-[takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft);
+[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft);
 
 disp("Takeoff Distance: " + takeoff_distance + " ft")
 disp("Landing Distance: " + landing_distance + " ft")
@@ -38,6 +36,11 @@ disp("Landing Distance: " + landing_distance + " ft")
 %W_S_sweep = linspace(0, 50, 100); %create a wing loading var to sweep over
 
 %max_W_S_blown_land = blown_wing_landing(aircraft, W_S_sweep);
+
+
+%% Updated Sizing Estimate
+
+[aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
 
 
 %% Updated Weight Estimate and P-S Curves
@@ -50,14 +53,14 @@ p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CL
 
 S_sweep = 200:10:1500;
 
-[P_point, S_point, ps] = PS_constraintcurves(S_sweep, W0, W_S_point, aircraft);
+[P_point, S_point, aircraft] = PS_constraintcurves(S_sweep, aircraft.W0, aircraft);
 disp("P-S design power: " + P_point + " hp");
 disp("P-S design wing area: " + S_point + "ft^2");
 
 
 % Get Weights at Design Point
 [W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    P_point, aircraft.W0, S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+    aircraft.P_point, aircraft.W0, aircraft.S_point, W_S_point, aircraft.prop_efficiency, aircraft);
 
 % calculate emergency range
 em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);

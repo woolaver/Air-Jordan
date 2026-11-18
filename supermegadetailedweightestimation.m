@@ -23,7 +23,7 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     
     % calculate dynamic pressure
     rho = density_isa_offset(aircraft.alt_cr, aircraft.dT_K);;                 % slug/ft^3
-    V_cr = aircraft.V_cr * 1.668;          % ft/s
+    V_cr = aircraft.V_cr * 1.688;          % ft/s
     q_cruise = 0.5 * rho * V_cr^2;         % lb/ft^2
 
     
@@ -32,6 +32,7 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     
     PW = aircraft.P_W;
     WS = aircraft.W_S;
+    
 
     % set-up iteration
     converged = false;
@@ -43,7 +44,7 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     while ~converged
         % components that scale with W0 (all use the current W0)
         [Wf, Wf_W0, L_D] = fuel_fraction_calc_refined(P, W0, aircraft);
-        
+        aircraft.wing_area = (WS / W0)^-1;
         % get fuel volume
         aircraft.fuel_density = 760/16.018; % fuel dens used in turbogenerators
         aircraft.fuel_volume = Wf/aircraft.fuel_density;
@@ -114,11 +115,11 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
                      W_fuel_system + W_furnishings + W_avionics + W_electrical + W_aircon_anti_ice + W_flight_controls;
     W.MTOW = W.emptyweight + W_payload + Wf;
 
-    names = {'Payload','Fuel','Fuselage','Wing','H-Tail','V-Tail','Landing Gear', ...
-        'Props','Turbogens','E-Motors','Battery', 'Reserve Battery', 'Airframe','Empty','MTOW'};
-    vals  = [W.payload, W.fuel_weight, W.fuselage_weight, W_wing, W.horizontaltail_weight, ...
-        W.verticaltail_weight, W.landinggear_weight, W.prop_weight, ...
-        W.turbogenerator_weight, W.electricmotor_weight, W_battery, W_reserve_battery, ...
+    names = {'Payload','Fuel','Fuel System Weight','Fuselage','Wing','H-Tail','V-Tail','Landing Gear', 'Anti-Ice & Airconditioning', ...
+        'Furnishings', 'Avionics', 'Flight Controls', 'Hydraulics', 'Props','Turbogens','E-Motors','Wiring', 'Battery', 'Reserve Battery', 'Airframe','Empty','MTOW'};
+    vals  = [W.payload, W.fuel_weight, W.fuel_system_weight, W.fuselage_weight, W_wing, W.horizontaltail_weight, ...
+        W.verticaltail_weight, W.landinggear_weight, W.aircon_and_anti_ice, W.furnishings, W.avionics, W.flight_controls, W.hydraulics,  W.prop_weight, ...
+        W.turbogenerator_weight, W.electricmotor_weight, W.electrical, W_battery, W_reserve_battery, ...
         W.airframe, W.emptyweight, W.MTOW]';
     T = table(names', vals, 100*vals/W.MTOW, 'VariableNames', {'Component','Weight_lb','Pct_MTOW'});
     disp(T)

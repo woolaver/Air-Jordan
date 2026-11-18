@@ -1,4 +1,4 @@
-function [takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft)
+function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft)
 
     % Higher fidelity analysis of blown wing takeoff and landing parameters
     % Using geometric estimates when needed, will be commented when used
@@ -132,6 +132,8 @@ function [takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft)
     CL_max_flap_unblown = 1.3226;
     V_stall_flap_unblown = sqrt(2*landing_weight/(rho*S*CL_max_flap_unblown));
 
+    aircraft.CLmax_land = CL_max;
+
     disp("Landing Configuration Unblown Wing V_stall: " + V_stall_flap_unblown/1.688 + " kts")
     disp("Landing Configuration Unblown Wing CL_max: " + CL_max_flap_unblown)
 
@@ -182,6 +184,7 @@ function [takeoff_distance, landing_distance] = BlownWingAnalysis(aircraft)
     disp("Takeoff Configuration Blown Wing V_stall: " + V_stall_calc/1.688 + " kts")
     disp("Takeoff Configuration Blown Wing CL_max: " + CL_max)
 
+    aircraft.CLmax_to = CL_max;
     CL_max_flap_unblown = 1.3226;
     V_stall_flap_unblown = sqrt(2*takeoff_weight/(rho*S*CL_max_flap_unblown));
 

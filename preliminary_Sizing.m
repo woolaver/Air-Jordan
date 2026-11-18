@@ -1,4 +1,4 @@
-function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
+function [W_S_point, P_W_point, aircraft] = preliminary_Sizing(aircraft, design_margin)
 
     %Preliminary Sizing function to create T/W - W/S design space
     
@@ -10,9 +10,9 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     c = -.0866;
     d = .8099;
     
-    W0_lbs = 2.2*aircraft.W0; %lbs
+    W0 = aircraft.W0; %lbs
     
-    S_wet = 10^(c + d*log10(W0_lbs)); %ft^2
+    S_wet = 10^(c + d*log10(W0)); %ft^2
 
     %f_clean = S_wet*aircraft.Cf_clean;
 
@@ -151,7 +151,7 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     P_W_balked = climb(G_land, CLmax_land, ks_land, aircraft.prop_efficiency, aircraft.Wland_W0, aircraft.rho_takeoff, rho_sl, L_D_land_gear);
 
     %maneuver
-    phi = deg2rad(60);
+    phi = deg2rad(25);
     n = 1/cos(phi);
     P_W_man = (V_cr/(550*aircraft.prop_efficiency)).*((q_cr*aircraft.CD0_clean)./W_S_sweep)+(W_S_sweep).*(n^2/(q_cr*pi*aircraft.AR*e_clean));
     P_W_man_cor = P_W_man .* (aircraft.Wcr_W0 / aircraft.Pcr_P0);
@@ -170,7 +170,10 @@ function [W_S_point, P_W_point] = preliminary_Sizing(aircraft, design_margin)
     P_W_man_index = round(W_S_land_point*(1000/50));
 
     W_S_point = W_S_land_point*(1-design_margin);
-    P_W_point = P_W_man_cor(P_W_man_index)*(1 + design_margin);
+    P_W_point = P_W_crit_cor(P_W_man_index)*(1 + design_margin);
+
+    aircraft.W_S = W_S_point;
+    aircraft.P_W = P_W_point;
     
     %plot
     figure();
