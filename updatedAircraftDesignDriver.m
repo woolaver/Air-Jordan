@@ -84,7 +84,7 @@ disp(aircraft.fuel_volume)
 
 %Improved weight estimation
 
-[Wimproved] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
+[Wimproved, aircraft] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
 
 %% Aerodynamic Refinement
 
@@ -101,14 +101,22 @@ disp("Updated CD0_land: " + CD0_land_updated)
 disp("Updated CD0_takeoff: " + CD0_takeoff_updated)
 disp("Updated CD0_land_brake: " + CD0_land_brake_updated)
 
+
+%% Emissions Objective Function
+
+[CO2, Nox, parts] = emissions_objective(P_point, aircraft);
+
 %% Cost Output based on Design Points
 %{
-[c] = aircraftcost(aircraft_data_01);
+aircraft.SHP_to = aircraft.P_W*aircraft.W0; 
+aircraft.W_oil = 0.0125 * aircraft.Wf * aircraft.tb / 100; % [lbs] weight of oil 
+[c] = aircraftcost(aircraft);
 
-disp("Total Cost = $" + c.tot_cost );
-disp("COC", c.T1);
-disp("FOC", c.T2);
-disp("IOC", c.T3);
-disp("Aircraft Cost", c.T0);
+fprintf('Total Cost = $%.2f\n', c.tot_cost);
+fprintf('COC = $%.2f\n', c.T1);
+fprintf('FOC = $%.2f\n', c.T2);
+fprintf('IOC = $%.2f\n', c.T3);
+fprintf('Aircraft Cost = $%.2f\n', c.T0);
+
 
 %}

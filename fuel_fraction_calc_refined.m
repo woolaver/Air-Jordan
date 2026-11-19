@@ -61,15 +61,10 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     W4 = W;  W4_W3 = W4/W3;
 
     % descent
-    W5_W4 = 0.992;  W5 = W5_W4*W4;
+    W5_W4 = 0.992;  % historical
 
-    % loiter: 45-min IFR reserve (91.167 / 135.223) at 5,000 ft, max-endurance CL
-    rho_loit = density_isa_offset(5000, dT);
-    CL_loit  = sqrt(3*CD0_clean/k_clean);
-    LD_loit  = CL_loit/(CD0_clean + k_clean*CL_loit^2);
-    V_loit   = sqrt(2*W5/(rho_loit*S*CL_loit));
-    E_loit   = aircraft.divert_time*60;                     % s
-    W6_W5    = exp(-E_loit*c_ft*V_loit/(eta*LD_loit));
+    % emergency range - entirely battery
+    W6_W5 = 1;
 
     % landing
     W7_W6 = 0.992;

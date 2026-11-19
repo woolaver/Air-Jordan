@@ -53,13 +53,18 @@ aircraft.horiz_tc = 0.12; % NACA 0012
 aircraft.n_limit = 3.08;
 aircraft.ultimate_load_factor = 1.5 * aircraft.n_limit; % 1.5 x max load factor, 3.08 g's selected (FAR)
 
+% Landing Gear Quantities
+aircraft.main_gear_length = 24;
+aircraft.nose_gear_length = 24;
+
+
 % Propulsion System Quantities
 aircraft.num_propeller = 10; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
 aircraft.prop_weight = 44.1; % lbs per propeller, chosen props
-aircraft.n_turbogenerators = 2; % number of chosen turbogenerators
-aircraft.weight_turbogenerators = 530.4; % lbs, weight of chosen turbogenerator
-aircraft.weight_electric_motors = 33.07; % lbs, weight of electric motors
+aircraft.n_turbogenerators = 1; % number of chosen turbogenerators
+aircraft.weight_turbogenerators = 1010; % lbs, weight of chosen turbogenerator, 1MW honeywell
+aircraft.weight_electric_motors = 30.2; % lbs, weight of electric motors
 
 % CAD System Results
 aircraft.S_fuselage = 931;
@@ -157,6 +162,38 @@ aircraft.V_takeoff = 40; %kts, estimation for now, needs to come from takeoff an
 aircraft.CD0_land = .071465;
 aircraft.CD0_land_brake = .2591;
 aircraft.CD0_takeoff = .053412;
+
+
+% cost driver parameters
+aircraft.n_pax       = 8;        % [-]      passengers, from RFP
+aircraft.R           = 400;      % [nmi]    design range, from RFP
+aircraft.then_year   = 2035;     % [yr]     entry into service
+
+% ----------- Logistics -------------
+aircraft.tb          = 3;        % [hr]     block time
+aircraft.PLF         = 0.75;     % [-]      passenger load factor
+aircraft.R_p         = 1.0;      % [-]      ratio of pax legs (Roskam IOC term)
+aircraft.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
+aircraft.ticket_price = 200;     % [$]      average one-way fare on the target route
+
+aircraft.P_f         = 2.24;     % [$/gal]  Jet-A price (then-year $)
+aircraft.rho_f       = 6.7;      % [lb/gal] Jet-A density
+aircraft.oil_frac    = 0.01;     % [-]      oil consumed as a fraction of block fuel
+aircraft.P_oil       = 46;       % [$/gal]  oil price based on current data
+aircraft.rho_oil     = 3.7;      % [lb/gal] density of aircraft lubricant oil
+
+aircraft.C_motor_per_hp = 150;   % [$/hp]
+aircraft.C_batt_kWh     = 520;   %   [$/kWh]
+
+aircraft.AF          = 1.0;      % [-]      crew airline factor (1.0 = high estimate)
+aircraft.R_L         = 125;      % [$/hr]   maintenance labour rate
+aircraft.H_em        = 4000;     % [hr]     hours between engine overhaul/swap
+
+% ---------- ownership ----------
+aircraft.n_life      = 20;       % [yr]     depreciation period
+aircraft.K_dep       = 0.10;     % [-]      residual value fraction
+aircraft.IR_a        = 0.02;     % [1/yr]   hull insurance rate 
+aircraft.f_financing = 0.07;     % [-]      financing as a fraction of DOC
 
 
 end

@@ -1,6 +1,6 @@
 % super mega detailed weight estimation (adapted from Algorithm 5 Metabook)
 
-function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
+function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
 % more detailed weight buildup using metabook and chosen systems
 
     W0 = Wguess;
@@ -40,11 +40,13 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
     W_press = 104; % weight of pressurization, lbs
     if isfield(aircraft,'W_pressurization'), W_press = aircraft.W_pressurization; 
     end
-    it = 0; maxit = 200;
+    it = 0; maxit = 250;
     while ~converged
         % components that scale with W0 (all use the current W0)
+        P = PW * W0;
         [Wf, Wf_W0, L_D] = fuel_fraction_calc_refined(P, W0, aircraft);
         aircraft.wing_area = (WS / W0)^-1;
+        Wl = 0.97*W0;
         % get fuel volume
         aircraft.fuel_density = 760/16.018; % fuel dens used in turbogenerators
         aircraft.fuel_volume = Wf/aircraft.fuel_density;
@@ -59,8 +61,8 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
         W_verticaltail = composite_stabilizer_factor * 0.073 * (1 + 0.2 *1) * (Nz * W0) ^0.376 * q_cruise^0.122 * aircraft.vert_area^0.873 * (100 * aircraft.vert_tc / ...
                            cosd(aircraft.vert_sweep))^-0.49 * (aircraft.vert_AR / cosd(aircraft.vert_sweep)^2)^0.357 * aircraft.vert_taper ^0.039;
         W_fuselage    = composite_fuselage_factor * 0.052 * aircraft.S_fuselage^1.086 * (Nz * W0) ^0.177 * aircraft.Lt ^-0.051 * (aircraft.L_D) ^-0.072 * q_cruise^0.241 + W_press;
-        %W_mainlanding_gear = 0.095(Nl * Wl)^0.768 *(aircraft.main_gear_length /12 )^0.845
-        %W_noselanding_gear = 0.125 * (Nl * W1)^0.566 *  (aircraft.nose_gear_length / 12)^0.845
+        %W_mainlanding_gear = 0.095*(Nl * Wl)^0.768 *(aircraft.main_gear_length /12 )^0.845;
+        %W_noselanding_gear = 0.125 * (Nl * W1)^0.566 *  (aircraft.nose_gear_length / 12)^0.845;
 
         W_turbogenerators = aircraft.weight_turbogenerators * aircraft.n_turbogenerators;
         
@@ -79,7 +81,7 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
                  W_battery + W_reserve_battery + W_fuselage + W_horizontaltail + ...
                  W_verticaltail + W_wing + W_landinggear + W_fuel_system + ... 
                  W_flight_controls + W_hydraulics + W_avionics + W_electrical + W_furnishings + W_aircon_anti_ice;
-        P = PW * W0_new;
+       
         converged = abs(W0_new - W0) <= tol;
         W0 = W0_new;
                 it = it + 1;
@@ -123,4 +125,14 @@ function [W] = supermegadetailedweightestimation(Wguess, P, aircraft)
         W.airframe, W.emptyweight, W.MTOW]';
     T = table(names', vals, 100*vals/W.MTOW, 'VariableNames', {'Component','Weight_lb','Pct_MTOW'});
     disp(T)
+
+    % update aircraft struct
+    aircraft.wing_area = (WS / W0)^-1;
+    aircraft.W0 = W.emptyweight + W_payload + Wf;
+    aircraft.Wf = Wf;
+    aircraft.W_payload = W_payload;
+    aircraft.W_electric_motors = W_electric_motors;
+    aircraft.W_battery = W_battery;
+    aircraft.P = P;
+   
 end

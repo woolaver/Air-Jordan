@@ -18,17 +18,17 @@ function [c] = aircraftcost(aircraft)
         % Roskam turboprop commuter price equations, 1989 base, 6,000-50,000 lb.
         CEF = cost_escalation_factor(1989, aircraft);
          
-        C_aircraft_rosk = 10^(1.1846 + 1.2625*log10(aircraft.MTOW)) * CEF;
+        C_aircraft_rosk = 10^(1.1846 + 1.2625*log10(aircraft.W0)) * CEF;
         C_engines = 10^(2.5262 + 0.9465*log10(aircraft.SHP_to)) * CEF;
         C_airframe = C_aircraft_rosk - C_engines;
-        C_engine_each = C_engines / max(aircraft.n_engines, 1);
+        C_engine_each = C_engines / max(aircraft.num_propeller, 1);
         C_motors = aircraft.C_motor_per_hp  * aircraft.P_motor_hp;
         C_batteries = aircraft.C_batt_kWh  * aircraft.E_batt;     
         C_aircraft = C_airframe + C_engines + C_motors + C_batteries;
         
         % save values in struct for table later
         a.C_airframe = C_aircraft_rosk - C_engines;
-        a.C_engine_each = C_engines / max(aircraft.n_engines, 1);
+        a.C_engine_each = C_engines / max(aircraft.num_propeller, 1);
         a.C_motors = aircraft.C_motor_per_hp  * aircraft.P_motor_hp;
         a.C_batteries = aircraft.C_batt_kWh  * aircraft.E_batt;     
         a.C_aircraft = C_airframe + C_engines + C_motors + C_batteries;
@@ -47,14 +47,14 @@ function [c] = aircraftcost(aircraft)
         CEF89 = cost_escalation_factor(1989, aircraft);
         CEF99 = cost_escalation_factor(1999, aircraft);
          
-        c.crew = aircraft.AF * (aircraft.K_route * aircraft.MTOW^0.4 * aircraft.tb) * CEF99;
+        c.crew = aircraft.AF * (aircraft.K_route * aircraft.W0^0.4 * aircraft.tb) * CEF99;
          
         c.fuel = 1.02 * aircraft.W_f   * aircraft.P_f   / aircraft.rho_f;
         c.oil  = 1.02 * aircraft.W_oil * aircraft.P_oil / aircraft.rho_oil;
         c.elec = 1.05 * aircraft.W_b * aircraft.P_elec;
          
-        c.airport = 1.5 * (aircraft.MTOW/1000) * CEF99;
-        c.nav     = 0.5 * CEF89 * (1.852*aircraft.R/aircraft.tb) * sqrt((0.00045359237*aircraft.MTOW)/50);
+        c.airport = 1.5 * (aircraft.W0/1000) * CEF99;
+        c.nav     = 0.5 * CEF89 * (1.852*aircraft.R/aircraft.tb) * sqrt((0.00045359237*aircraft.W0)/50);
          
         % airframe maintenance ($/block hr -> $/trip)
         C_MLA     = 1.03 * (3 + 0.067*C_airframe/1000) * aircraft.R_L;
@@ -62,10 +62,10 @@ function [c] = aircraftcost(aircraft)
         c.maint_af = (C_MLA + C_MMA) * aircraft.tb;
          
         % engine maintenance ($/block hr per engine -> $/trip, all engines)
-        shp_each   = aircraft.SHP_to / max(aircraft.n_engines, 1);
+        shp_each   = aircraft.SHP_to / max(aircraft.num_propeller, 1);
         C_MLE      = 1.03 * 1.3 * (0.4956 + 0.0532*(shp_each/1000)*(1100/aircraft.H_em) + 0.1) * aircraft.R_L;
         C_MME      = 1.03 * (30*CEF89 + 0.79e-5 * C_engine_each);   % placeholder form
-        c.maint_eng = aircraft.n_engines * (C_MLE + C_MME) * aircraft.tb;
+        c.maint_eng = aircraft.num_propeller * (C_MLE + C_MME) * aircraft.tb;
          
         COC = c.crew + c.fuel + c.oil + c.elec + c.airport + c.nav + ...
               c.maint_af + c.maint_eng;
@@ -88,7 +88,7 @@ function [c] = aircraftcost(aircraft)
         f.dep = C_aircraft * (1 - aircraft.K_dep) * aircraft.tb / (aircraft.n_life * f.U_annual);
         f.ins = (aircraft.IR_a * C_aircraft / f.U_annual) * aircraft.tb;
          
-        k_reg = 0.001 + 1e-8 * aircraft.MTOW;
+        k_reg = 0.001 + 1e-8 * aircraft.W0;
         DOC   = (COC + f.dep + f.ins) / (1 - aircraft.f_financing - k_reg);
         f.fin = aircraft.f_financing * DOC;
         f.reg = k_reg   * DOC;
