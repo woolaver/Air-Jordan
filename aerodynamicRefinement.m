@@ -11,8 +11,8 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     %Component Build-up Method to get Parasite Drag
     %Components: fuselage, wing, horizontal stabilizer, vertical
     %stabilizer
-    Sref = aircraft.S;
-    S_wet_wing = aircraft.S*2;
+    Sref = aircraft.wing_area;
+    S_wet_wing = aircraft.wing_area*2;
     S_wet_fus = aircraft.S_wet_fuselage;
     S_wet_h_tail = aircraft.S_wet_horizontalStabilizer;
     S_wet_v_tail = aircraft.S_wet_verticalStabilizer;
