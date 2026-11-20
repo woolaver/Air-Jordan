@@ -117,6 +117,5 @@ fprintf('COC = $%.2f\n', c.T1);
 fprintf('FOC = $%.2f\n', c.T2);
 fprintf('IOC = $%.2f\n', c.T3);
 fprintf('Aircraft Cost = $%.2f\n', c.T0);
-
-
 %}
+

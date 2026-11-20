@@ -21,12 +21,10 @@ function [CO2, NOx, parts] = emissions_objective(P, aircraft)
     % general manufacturing
     N_life = p.flights_per_yr * p.life_yr;
     m_pwr  = WeightStruct.prop_weight + WeightStruct.turbogenerator_weight + WeightStruct.electricmotor_weight;
-   
-    parts.resv  = WeightStruct.reserve_battery_weight*lb*p.k_primary/(p.flights_per_yr*p.shelf_life_yr);
     parts.mfg   = (WeightStruct.airframe*lb*p.k_airframe + m_pwr*lb*p.k_pwr)/N_life;
     
     % CO2 and NOx emissions in kg
-    CO2 = parts.fuel + parts.grid + parts.batt + parts.resv + parts.mfg;
+    CO2 = parts.fuel + parts.grid + parts.batt + parts.mfg;
     NOx = (m_fuel*p.EI_NOx + E_grid*p.EI_NOx_grid)/1000;  % kg
 end
 

@@ -59,7 +59,7 @@ aircraft.nose_gear_length = 24;
 
 
 % Propulsion System Quantities
-aircraft.num_propeller = 10; %from Data Sheet
+aircraft.num_propeller = 12; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
 aircraft.prop_weight = 44.1; % lbs per propeller, chosen props
 aircraft.n_turbogenerators = 1; % number of chosen turbogenerators

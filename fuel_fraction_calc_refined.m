@@ -63,8 +63,8 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     % descent
     W5_W4 = 0.992;  % historical
 
-    % emergency range - entirely battery
-    W6_W5 = 1;
+    % IFR Reserve
+    W6_W5 = 0.992;
 
     % landing
     W7_W6 = 0.992;
