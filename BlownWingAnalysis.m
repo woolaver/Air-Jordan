@@ -683,7 +683,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 %no change in height during rotation
                 h(i+1) = h(i);
                 CL_vec(i+1) = CL;
-                gamma(i+1) = (L - W*cos(gamma(i)))/(m*V(i+1));
+                gamma(i+1) = gamma(i);
     
                 if (rad2deg(alpha(i+1)) >= alpha_target)
                     rotate = 0;

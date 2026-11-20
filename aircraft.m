@@ -103,7 +103,7 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 aircraft.W0 = 16207; %lbs
 aircraft.prop_diameter = 7; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
-aircraft.max_power = 550*1765; %slug*ft^2/s^3, from P-S plot 1765 hp
+aircraft.max_power = 550*1997; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
 aircraft.delta_F = 60; %deg, flap deflection, assuming same for landing and takeoff for now
 aircraft.landing_speed = 55; %kts, from blown wing landing analysis
@@ -162,7 +162,6 @@ aircraft.V_takeoff = 40; %kts, estimation for now, needs to come from takeoff an
 aircraft.CD0_land = .071465;
 aircraft.CD0_land_brake = .2591;
 aircraft.CD0_takeoff = .053412;
-
 
 % cost driver parameters
 aircraft.n_pax       = 8;        % [-]      passengers, from RFP
