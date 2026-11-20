@@ -30,7 +30,7 @@ aircraft.taperratio = 1;
 aircraft.root_tip_ratio = 1;
 aircraft.wing_sweep = 0;
 %aircraft.wing_cont_surf_area = ; % wing mounted control surface area
-aircraft.wing_area = 733.3483; % ft^2, from design point
+aircraft.wing_area = 700; % initial guess
 aircraft.wing_span = sqrt(aircraft.wing_area * aircraft.AR);
 aircraft.wing_control_surf_area = 0.3 * aircraft.wing_area;
 aircraft.w_fuelwing = 0; % weight of fuel stored in wings, currently none
@@ -100,7 +100,7 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 
 %Blown wing analysis properties
-aircraft.prop_diameter = 6; %ft, initial estimate from blown wing analysis
+aircraft.prop_diameter = 4.5; %ft, initial estimate from blown wing analysis
 aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
@@ -119,7 +119,6 @@ aircraft.CL_tail = -.5; %initial CL_tail
 aircraft.CL_tail_dot = .5; %random estimate
 aircraft.Iyy = 30000; %slug*ft^2, estimate twin engine turboprop
 aircraft.Cm_wb_0 = .05; %estimate from google
-aircraft.S = 733.3484; % from AR of 9 with 22.1 wing loading
 aircraft.c_bar = 9.0268; %from AR of 9
 aircraft.x_mlg = 18.38; %ft, from CAD as of 11/7
 aircraft.x_cg = 16.5; %ft

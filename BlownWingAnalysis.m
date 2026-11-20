@@ -1,4 +1,4 @@
-function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft)
+function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft, converged)
 
     % Higher fidelity analysis of blown wing takeoff and landing parameters
     % Using geometric estimates when needed, will be commented when used
@@ -7,7 +7,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
     AR = aircraft.AR; %From aircraftDesignDriver
     num_props = aircraft.num_propeller; 
-    S = aircraft.S; %ft^2 from updated P-S plot
+    S = aircraft.wing_area; %ft^2 from updated P-S plot
     prop_diameter = aircraft.prop_diameter; %ft, just an initital guess, sized to get disk_area_ratio ~ .35
     Ad = num_props*(pi*prop_diameter^2)/4;
     
@@ -502,6 +502,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         i = i+1;
     end
 
+    if converged == true
         figure()
     plot(s, h, 'LineWidth', 1, 'Color', 'Blue')
     title('Landing Roll Height vs. Distance')
@@ -550,9 +551,13 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     ylabel('CL')
     xlabel('Speed (ft/s)')
 
+    end
+
     landing_distance = s(end);
 
     disp("Blown Wing Landing Distance: " + landing_distance + " ft")
+
+    
 
     %% Integrate Takeoff 
     T0 = (2*rho*Ad)^(1/3)*(eta_a*P_sh)^(2/3); %Zero-velocity thrust
@@ -749,7 +754,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         t(i+1) = t(i) + dt;
         i = i+1;
     end
-    
+    if converged == true
     figure()
     plot(s, h, 'LineWidth', 1, 'Color', 'Blue')
     title('Takeoff Roll Height vs. Distance')
@@ -797,6 +802,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     title('Takeoff Roll CL vs. Speed')
     ylabel('CL')
     xlabel('Speed (ft/s)')
+    end
 
     takeoff_distance = s(end);
 

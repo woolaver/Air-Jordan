@@ -27,8 +27,9 @@ aircraft.Wto_W0 = Wto_W0;
 
 %% Blown Wing Analysis
 
-
-[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft);
+aircraft.wing_area = 700; % initial guess
+converged = 0;
+[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft, converged);
 
 disp("Takeoff Distance: " + takeoff_distance + " ft")
 disp("Landing Distance: " + landing_distance + " ft")
@@ -81,14 +82,8 @@ aircraft.fuel_volume = WeightStruct.Wf/aircraft.fuel_density;
 disp('Fuel Volume (ft^3): ')
 disp(aircraft.fuel_volume)
 
-
-%Improved weight estimation
-
-[Wimproved, aircraft] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
-
 %% Aerodynamic Refinement
-
-
+134
 [CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated, CD0_land_brake_updated] = aerodynamicRefinement(aircraft);
 
 aircraft.CD0_clean = CD0_clean_updated;
@@ -100,6 +95,11 @@ disp("Updated CD0_clean: " + CD0_clean_updated)
 disp("Updated CD0_land: " + CD0_land_updated)
 disp("Updated CD0_takeoff: " + CD0_takeoff_updated)
 disp("Updated CD0_land_brake: " + CD0_land_brake_updated)
+
+%% Improved weight estimation
+
+[Wimproved, aircraft] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
+
 
 
 %% Emissions Objective Function
@@ -120,5 +120,10 @@ fprintf('Aircraft Cost = $%.2f\n', c.T0);
 %}
 
 [aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
+converged = 1;
 
-[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft);
+[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft, converged);
+
+[aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
+
+
