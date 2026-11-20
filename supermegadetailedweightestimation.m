@@ -44,7 +44,8 @@ function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
         % components that scale with W0 (all use the current W0)
         P = PW * W0;
         [Wf, Wf_W0, L_D] = fuel_fraction_calc_refined(P, W0, aircraft);
-        aircraft.wing_area = (WS / W0)^-1;
+      %  aircraft.wing_area = (WS / W0)^-1;
+      aircraft.wing_area = 733;
         Wl = 0.97*W0;
         % get fuel volume
         aircraft.fuel_density = 760/16.018; % fuel dens used in turbogenerators
@@ -125,7 +126,7 @@ function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
     disp(T)
 
     % update aircraft struct
-    aircraft.wing_area = (WS / W0)^-1;
+    aircraft.wing_area = 733;
     aircraft.W0 = W.emptyweight + W_payload + Wf;
     aircraft.Wf = Wf;
     aircraft.W_payload = W_payload;
