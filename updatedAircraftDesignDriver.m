@@ -119,3 +119,6 @@ fprintf('IOC = $%.2f\n', c.T3);
 fprintf('Aircraft Cost = $%.2f\n', c.T0);
 %}
 
+[aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
+
+[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft);
