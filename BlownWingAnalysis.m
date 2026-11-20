@@ -363,7 +363,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     x_mlg = aircraft.x_mlg; %estimate from Cinar
     x_cg = aircraft.x_cg; %estimate from Cinar
     x_acw = aircraft.x_acw; %assuming ac is at quarter chord
-    Sh = aircraft.Sh; %estimated 40% sizing of tail
+    Sh = aircraft.Sh; 
     l_tail = aircraft.l_tail; %ft, estimated from beechcraft baron
     z_cg = aircraft.z_cg; %ft, estimated from beechcraft baron
     z_mlg = aircraft.z_mlg; %ft, main landing gear on the ground
@@ -402,7 +402,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
 
             if(h(i+1) < 15)
-                throttle = .7;
+                throttle = .5;
                 approach = 0;
                 flare = 1;
             end
