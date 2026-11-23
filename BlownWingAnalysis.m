@@ -19,7 +19,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     rho = aircraft.rho_takeoff; %slug/ft^3, 1.184 kg/m^3, ISA + 18F density
     P_sh = aircraft.max_power; %slug*ft^2/s^3, from updated P-S plot 1765 hp
     eta_a = aircraft.eta_a; %Taken from Cinar slides from X-57
-    V = aircraft.landing_speed; %ft/s, from 55 kts landing speed
+    V = aircraft.landing_speed*1.688; %ft/s, from 55 kts landing speed
     delta_F = aircraft.delta_F; %deg, 60 degree flap deflection
     eta_F = aircraft.eta_F; %estimated from graph in Cinar slides
     
@@ -40,8 +40,10 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
     
     %% Estimate the powered lift curve
+
+    %Takeoff
     
-    alpha = linspace(-5, 20, 1000);
+    alpha = linspace(-10, 20, 1000);
     
     CL_u = .1856 + .0334*delta_F + .0667.*alpha;
     
@@ -53,23 +55,88 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
     F_0 = CL_u;
     
-    CL = CL_u + F_Cj - F_0;
+    CL_takeoff = CL_u + F_Cj - F_0;
+
+    %Cruise
+    rho_cr = aircraft.rho_cr;
+    V_cr = aircraft.V_cr*1.688;
+
+    CL_cruise = (aircraft.Wcr_W0 * aircraft.W0)/(.5*rho_cr*V_cr^2*aircraft.wing_area);
+
+    CD_cruise = aircraft.CD0_clean + 1/(aircraft.e_cr*pi*AR)*CL_cruise^2;
+    D_cruise = .5*rho_cr*V_cr^2*aircraft.wing_area*CD_cruise;
+
+    Power_cruise = D_cruise*V_cr;
+
+    throttle_cr = Power_cruise/P_sh;
+
+    [delta_C_j, delta_j, T_c_prime] = calc_Tc(V_cr, eta_a, rho_cr, throttle_cr*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+
+    delta_F_clean = 0;
+
+    CL_u = .1856 + .0334*delta_F_clean + .0667.*alpha;
+    
+    A0 = .1856 + .0334*delta_F_clean + .0667.*alpha;
+    A1 = .0121*delta_j - .0085.*alpha + .0426;
+    A2 = .0140*delta_j + .0226.*alpha + .1407;
+    
+    F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
+    
+    F_0 = CL_u;
+
+    CL_clean = CL_u + F_Cj - F_0;
+
+    %Landing
+
+    throttle = .15;
+
+    [delta_C_j, delta_j, T_c_prime] = calc_Tc(V, eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+
+    CL_u = .1856 + .0334*delta_F+ .0667.*alpha;
+    
+    A0 = .1856 + .0334*delta_F + .0667.*alpha;
+    A1 = .0121*delta_j - .0085.*alpha + .0426;
+    A2 = .0140*delta_j + .0226.*alpha + .1407;
+    
+    F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
+    
+    F_0 = CL_u;
+
+    CL_land = CL_u + F_Cj - F_0;
+
+
     
     %% Set the angle-of-attack limit (instead of a fixed CL_max)
-    
+
     alpha_stall = min(16 + 1.5*T_c_prime, 22);
     
     delta_alpha = 10; % 10 degree stall marign from Courtin
     
     alpha_max = alpha_stall - delta_alpha;
-    CL_max = CL(find(alpha <= alpha_max, 1, "last"));
+    alpha_min = -8; %from Courtin, ref 73 NASA wind tunnel test
+
+    CL_max_takeoff = CL_takeoff(find(alpha <= alpha_max, 1, "last"));
+    CL_max_clean = CL_clean(find(alpha <= alpha_max, 1, "last"));
+    CL_max_land = CL_land(find(alpha <= alpha_max, 1, "last"));
+
+    CL_min_takeoff = CL_takeoff(find(alpha <= alpha_min, 1, "last"));
+    CL_min_clean = CL_clean(find(alpha <= alpha_min, 1, "last"));
+    CL_min_land = CL_land(find(alpha <= alpha_min, 1, "last"));
+
     figure()
     hold on
-    plot(alpha, CL, 'LineWidth', 1, 'Color', 'Blue')
-    plot(alpha_max, CL_max, '-o', 'LineWidth', 3)
+    plot(alpha, CL_takeoff, 'LineWidth', 1)
+    plot(alpha, CL_clean, 'LineWidth', 1)
+    plot(alpha, CL_land, 'LineWidth', 1)
+    plot(alpha_max, CL_max_takeoff, '-o', 'LineWidth', 3)
+    plot(alpha_max, CL_max_clean, '-o', 'LineWidth', 3)
+    plot(alpha_max, CL_max_land, '-o', 'LineWidth', 3)
+    plot(alpha_min, CL_min_takeoff, '-o', 'LineWidth', 3)
+    plot(alpha_min, CL_min_clean, '-o', 'LineWidth', 3)
+    plot(alpha_min, CL_min_land, '-o', 'LineWidth', 3)
     xlabel('\alpha (deg)')
     ylabel('C_L')
-    legend('Lift Curve Slope', 'Max CL')
+    legend('Lift Curve Slope Takeoff Configuration', 'Lift Curve Slope Clean Configuration', 'Lift Curve Slope Landing Configuration', 'Takeoff Max CL', 'Clean Max CL', 'Landing Max CL', 'Takeoff Min CL', 'Clean Min CL', 'Landing Min CL', 'Location', 'Best')
     title('Powered Lift Curve')
 
     %% Unblown CLmax from AVL (CLtot at alpha = 0 and 10 deg, body axis)

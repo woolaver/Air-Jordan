@@ -22,6 +22,7 @@ aircraft.specific_fuel_consumption_cruise = .412*1.64399; %lb/(hp*h) converted f
 aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.V_cr = 225; %kts, from RFP
 aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
+aircraft.rho_cr = .000738; %slug/ft^3, 35000 ft
 aircraft.n_engine = 2; % number of turbogenerators
 aircraft.n_fuel_tanks = 1;
 
@@ -105,7 +106,7 @@ aircraft.fB = .65; % initial estimate from Courtin, how much of the wing is actu
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
 aircraft.delta_F = 60; %deg, flap deflection, assuming same for landing and takeoff for now
-aircraft.landing_speed = 55; %kts, from blown wing landing analysis
+aircraft.landing_speed = 32.6; %kts, from blown wing landing analysis
 aircraft.eta_F = .81; %Estimate from Cinar slides
 aircraft.e_takeoff = .78; %oswald efficiency with takeoff flaps from AVL
 aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
