@@ -446,6 +446,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
 
             if(h(i+1) < 8)          % flare height [ft]
+                sink_fl = -V(i+1)*sin(gamma(i+1));   % sink rate entering the flare [ft/s]
                 approach = 0;       % keep approach power: no throttle step (the step made it climb away)
                 flare = 1;
             end
@@ -493,7 +494,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             gamma_dot = (L - W_land*cos(gamma(i)))/(m_land*V(i+1));
     
             gamma(i+1) = gamma(i) + gamma_dot*dt;
-            gamma(i+1) = min(gamma(i+1), 0);   % the flare ends level, never climbs
+            gamma(i+1) = -asin(min(max(3, sink_fl*h(i)/8)/V(i+1), 1));   % sink rate falls linearly to 3 ft/s at touchdown
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
             CL_vec(i+1) = CL;
@@ -630,7 +631,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     x_cg = aircraft.x_cg; %estimate from Cinar
     x_acw = aircraft.x_acw; %assuming ac is at quarter chord
     Sh = aircraft.Sh; %estimated 40% sizing of tail
-    l_tail = aircraft.l_tail + 6; %ft, estimated from beechcraft baron
+    l_tail = aircraft.l_tail; %ft, estimated from beechcraft baron
     z_cg = aircraft.z_cg; %ft, estimated from beechcraft baron
     z_mlg = aircraft.z_mlg; %ft, main landing gear on the ground
     CD0_takeoff = aircraft.CD0_takeoff;
