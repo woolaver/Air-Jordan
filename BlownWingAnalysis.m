@@ -484,7 +484,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             V_dot = (-X - W_land*sin(gamma(i)))/m_land;
             
             if(alpha(i) < alpha_target)
-                Cm_wb = Cm_wb_0 + Cm_alpha_fusalpha(i); % alpha in rad, fuselage destabilizing
+                Cm_wb = Cm_wb_0 + Cm_alpha_fus*alpha(i); % alpha in rad, fuselage destabilizing
                 
                 if(CL_tail > -2)
                     CL_tail = CL_tail - CL_tail_dot*dt;
@@ -722,7 +722,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             V_dot = (-X - mu*(W - L))/m;
     
             if (rad2deg(alpha(i)) < alpha_target)
-                Cm_wb = Cm_wb_0 + Cm_alpha_fusalpha(i); % alpha in rad, fuselage destabilizing
+                Cm_wb = Cm_wb_0 + Cm_alpha_fus*alpha(i); % alpha in rad, fuselage destabilizing
     
                 if(CL_tail > -2)
                     CL_tail = CL_tail - CL_tail_dot*dt;
