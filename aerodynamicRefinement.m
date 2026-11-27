@@ -175,7 +175,7 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     disk_area_ratio = Ad/Sref;
 
     D_q_stopped_prop = .8*disk_area_ratio*2*(pi*aircraft.prop_diameter^2)/4;
-    D_q_air_brake = 1.6*(80);
+    D_q_air_brake = 0;   % no airbrake on the aircraft
 
     CD_mis_clean = (1/Sref)*(D_q_fus + D_q_struts + D_q_air_scoop);
 
