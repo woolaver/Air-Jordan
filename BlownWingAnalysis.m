@@ -24,11 +24,8 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     eta_F = aircraft.eta_F; %estimated from graph in Cinar slides
     
     function [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V, eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F) 
-        syms Vj
-    
-        func = eta_a*P_sh == (rho*Ad/4)*(Vj - V)*((Vj + V)^2);
-        sol = (vpasolve(func, Vj));
-        Vj = double(vpa(sol(1), 3));
+        fj = @(x) (rho*Ad/4)*(x - V).*((x + V).^2) - eta_a*P_sh;   % momentum balance, zero at the jet speed
+        Vj = fzero(fj, [V, V + 1e4]);                               % same root, no symbolic toolbox
     
         T_c_prime = disk_area_ratio*((Vj^2/V^2) - 1);
         delta_C_j = T_c_prime*(1 + (V/Vj));
@@ -175,7 +172,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
        V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update, converges to the true stall speed
     end
-
+    alpha_app = (CL_app - c0)/c1;   % wing angle that gives the approach C_L [deg]
     aircraft.CL_app = CL_app;
     aircraft.CLmax_land = CL_max;
     V_stall_land = V_stall_calc; %ft/s
@@ -185,8 +182,6 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     CL_max_flap_unblown = 1.3226;
     V_stall_flap_unblown = sqrt(2*landing_weight/(rho*S*CL_max_flap_unblown));
-
-    aircraft.CLmax_land = CL_max;
 
     disp("Landing Configuration Unblown Wing V_stall: " + V_stall_flap_unblown/1.688 + " kts")
     disp("Landing Configuration Unblown Wing CL_max: " + CL_max_flap_unblown)
@@ -372,7 +367,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     dt = .01; %s
     V0 = 1.3*V_stall_land; %ft/s
     g = 32.1; %ft/s^2
-    init_glide_path = deg2rad(-17.5); %initial estimate
+    init_glide_path = deg2rad(-12); %initial estimate
     
     %initialize arrays for storage
     i = 1;
@@ -381,9 +376,9 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     t = 0;
     V = V0;
     CL_vec = 0;
-    alpha = deg2rad(0); %rad
+    alpha = deg2rad(alpha_app);   % fly the approach at the angle that gives CL_app
     gamma = init_glide_path;
-    throttle = .15;
+    throttle = aircraft.approach_power_frac; % same power as in the C_L,max loop
     q_pitch = 0;   % pitch rate [rad/s]
 
     %logic for controlling phase of landing
@@ -442,9 +437,8 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_vec(i+1) = CL;
 
 
-            if(h(i+1) < 15)
-                throttle = .5;
-                approach = 0;
+            if(h(i+1) < 8)          % flare height [ft]
+                approach = 0;       % keep approach power: no throttle step (the step made it climb away)
                 flare = 1;
             end
         end
@@ -455,10 +449,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
             CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
             CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
+            CL = min(1.3*W_land*cos(gamma(i))/(.5*rho*V(i)^2*S), 0.95*(fB*CL_loc + (1 - fB)*CLf));   % n = 1.3 flare, 5 % below C_Lmax
             CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
 
             alpha_stall = min(16 + 1.5*T_c_prime, 22); %deg
-            alpha_target = deg2rad(alpha_stall - 8);
+            alpha_target = deg2rad(alpha_stall - aircraft.alpha_margin);
     
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
@@ -490,6 +485,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             gamma_dot = (L - W_land*cos(gamma(i)))/(m_land*V(i+1));
     
             gamma(i+1) = gamma(i) + gamma_dot*dt;
+            gamma(i+1) = min(gamma(i+1), 0);   % the flare ends level, never climbs
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
             CL_vec(i+1) = CL;
@@ -536,7 +532,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_vec(i+1) = CL;
 
         end
-
+        if i > 20000, warning('Landing simulation stopped after 200 s'); break; end
         t(i+1) = t(i) + dt;
         i = i+1;
     end
@@ -646,7 +642,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     gamma = deg2rad(0);
     q_pitch = 0;
 
-    V_stall = sqrt(2*W/(rho*S*CL_max));
+    V_stall = sqrt(2*W/(rho*S*aircraft.CLmax_to));
     
     %explicit euler method to time march
     %assuming no mass loss during takeoff, fuel loss is pretty negligible
@@ -656,7 +652,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     while h < 50
         %assuming full throttle constantly, assuming constant rho, changes in
         %density are negligble from 0 - 50 ft
-        [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+       [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, P_sh, Ad, disk_area_ratio, dF, eta_F);
     
         if(climb == 1)
             %estimate CL
@@ -758,7 +754,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_vec(i+1) = CL;
     
             alpha_stall = min(16 + 1.5*T_c_prime, 22); %deg
-            alpha_allowed = alpha_stall - 8; %deg
+            alpha_allowed = alpha_stall - aircraft.alpha_margin; %deg
     
             CL_u = .1856 + .0334*delta_F + .0667*alpha_allowed;
             A0 = .1856 + .0334*delta_F + .0667*alpha_allowed;
@@ -780,10 +776,10 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             if (V(i+1) >= V_stall*1.1)
                 roll = 0;
                 rotate = 1;
-                alpha_target = alpha_stall - 8 - 4; %deg
+                alpha_target = alpha_stall - aircraft.alpha_margin; %deg
             end
         end
-    
+        if i > 20000, warning('Take-off simulation stopped after 200 s'); break; end
         t(i+1) = t(i) + dt;
         i = i+1;
     end
