@@ -12,7 +12,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     Ad = num_props*(pi*prop_diameter^2)/4;
     
     disk_area_ratio = Ad/S;
-        fB = 0.9*min(num_props*prop_diameter/sqrt(AR*S), 1);   % blown span share n*D/b, x0.9 for slipstream contraction
+    fB = min(num_props*prop_diameter/sqrt(AR*S), aircraft.f_span_max);   % blown span share n*D/b, x0.9 for slipstream contraction
     
     %% Thrust and slipstream speed from shaft power
     
@@ -420,6 +420,13 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     dF  = delta_F;                    % landing flap (64 deg)
     CLf = aircraft.CLmax_flap_LD;     % 2.60
     while V > 0
+        % start on the steady glide path for the approach power (no phugoid)
+    [dCj0, dj0, Tc0, Vj0] = calc_Tc(V0, eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+    CL0 = W_land/(.5*rho*V0^2*S);
+    CX0 = CD0_land + CL0^2/(pi*e_land*AR + 2*dCj0) - Tc0*(Vj0*cosd(dj0) - V0)/(Vj0 - V0);
+    gamma = -atan(CX0/CL0);
+    aircraft.gamma_app = rad2deg(gamma);
+    disp(['Approach path angle: ' num2str(rad2deg(gamma)) ' deg at ' num2str(V0/1.688) ' kt'])
         [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
         if (approach == 1)
             dCJe   = aircraft.k_blow*delta_C_j;
@@ -427,7 +434,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
             CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
             CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
-            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
+            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j)  - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));   % turned jet: only Vj*cos(dj) - V of its momentum pushes forward
     
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
@@ -459,7 +466,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
             CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
             CL = min(1.3*W_land*cos(gamma(i))/(.5*rho*V(i)^2*S), 0.95*(fB*CL_loc + (1 - fB)*CLf));   % n = 1.3 flare, 5 % below C_Lmax
-            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
+            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j)  - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));   % turned jet: only Vj*cos(dj) - V of its momentum pushes forward
 
             alpha_stall = min(16 + 1.5*T_c_prime, 22); %deg
             alpha_target = deg2rad(alpha_stall - aircraft.alpha_margin);
@@ -494,8 +501,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             gamma_dot = (L - W_land*cos(gamma(i)))/(m_land*V(i+1));
     
             gamma(i+1) = gamma(i) + gamma_dot*dt;
-            gamma(i+1) = -asin(min(max(3, sink_fl*h(i)/8)/V(i+1), 1));   % sink rate falls linearly to 3 ft/s at touchdown
-            s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
+            gamma(i+1) = -asin(min(max(aircraft.sink_TD, sink_fl*h(i)/8)/V(i+1), 1));   % sink rate falls to 6 ft/s at touchdown
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
             CL_vec(i+1) = CL;
 
@@ -671,7 +677,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
             CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
           
-            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
+            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j)  - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));   % turned jet: only Vj*cos(dj) - V of its momentum pushes forward
     
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
@@ -696,7 +702,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
             CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
             CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
-            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
+            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j)  - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));   % turned jet: only Vj*cos(dj) - V of its momentum pushes forward
 
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
@@ -748,7 +754,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             L = .5*rho*V(i)^2*S*CL; %lbs
     
             %estimate CX
-            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
+            CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j)  - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));   % turned jet: only Vj*cos(dj) - V of its momentum pushes forward
         
             X = .5*rho*V(i)^2*S*CX; %lbs
         
