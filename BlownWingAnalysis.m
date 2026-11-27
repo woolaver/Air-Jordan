@@ -23,7 +23,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     delta_F = aircraft.delta_F; %deg, 60 degree flap deflection
     eta_F = aircraft.eta_F; %estimated from graph in Cinar slides
     
-    function [delta_C_j, delta_j, T_c_prime] = calc_Tc(V, eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F)   
+    function [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V, eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F) 
         syms Vj
     
         func = eta_a*P_sh == (rho*Ad/4)*(Vj - V)*((Vj + V)^2);
@@ -158,26 +158,16 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     while diff > tol
 
-        [delta_C_j, delta_j, T_c_prime] = calc_Tc(1.3*V_stall_flaps, eta_a, rho, aircraft.approach_power_frac*P_sh, Ad, disk_area_ratio, delta_F, eta_F);  % approach speed 1.3 V_S, approach power
-        alpha = linspace(-5, 20, 1000);
-        CL_u = .1856 + .0334*delta_F + .0667.*alpha;
-        
-        A0 = .1856 + .0334*delta_F + .0667.*alpha;
-        A1 = .0121*delta_j - .0085.*alpha + .0426;
-        A2 = .0140*delta_j + .0226.*alpha + .1407;
-        
-        F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-        
-        F_0 = CL_u;
-        
-        CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
-
+        V_app = aircraft.k_app*V_stall_flaps;
+        [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V_app, eta_a, rho, aircraft.approach_power_frac*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+        CLf    = aircraft.CLmax_flap_LD;
+        CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V_app)^2 - 1)));   % blown strip sees (Vj/V)^2
+        CL_max = fB*CL_loc + (1 - fB)*CLf;                                             % stall reference, strip theory
+        dCJe = aircraft.k_blow*delta_C_j;                                              % lift curve: team fit
+        c0 = .1856 + .0334*delta_F + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+        c1 = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
         alpha_stall = min(16 + 1.5*T_c_prime, 22);
-    
-        delta_alpha = 10; % 10 degree stall marign from Courtin
-    
-        alpha_max = alpha_stall - delta_alpha;
-        CL_max = CL(find(alpha <= alpha_max, 1, "last"));
+        CL_app = min(CL_max/aircraft.k_app^2, c0 + c1*(alpha_stall - aircraft.alpha_margin));  % usable approach C_L
 
         V_stall_calc = sqrt(2*landing_weight/(rho*S*CL_max));
 
@@ -186,6 +176,8 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
        V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update, converges to the true stall speed
     end
 
+    aircraft.CL_app = CL_app;
+    aircraft.CLmax_land = CL_max;
     V_stall_land = V_stall_calc; %ft/s
 
     disp("Landing Configuration Blown Wing V_stall: " + V_stall_land/1.688 + " kts")
@@ -210,39 +202,35 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     while diff > tol
 
-        [delta_C_j, delta_j, T_c_prime] = calc_Tc(1.1*V_stall_flaps, eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F);
-        alpha = linspace(-5, 20, 1000);
-    
-        CL_u = .1856 + .0334*delta_F + .0667.*alpha;
-        
-        A0 = .1856 + .0334*delta_F + .0667.*alpha;
-        A1 = .0121*delta_j - .0085.*alpha + .0426;
-        A2 = .0140*delta_j + .0226.*alpha + .1407;
-        
-        F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-        
-        F_0 = CL_u;
-        
-        CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
+        V_LO  = aircraft.k_TO*V_stall_flaps;                 % lift-off speed = 1.1 x current stall-speed guess
+        dF_TO = aircraft.delta_F_to;                         % take-off flap (40 deg), not the landing flap
 
+        % slipstream at lift-off, FULL power (take-off)
+        [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V_LO, eta_a, rho, P_sh, Ad, disk_area_ratio, dF_TO, eta_F);
+
+        % stall reference: blown strip sees (Vj/V)^2, capped; unblown strip keeps the flap value
+        CLf    = aircraft.CLmax_flap_TO;                                                  % 2.28
+        CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V_LO)^2 - 1)));
+        CL_max = fB*CL_loc + (1 - fB)*CLf;
+
+        % angle check with the team fit (calibrated blowing): wing at least alpha_margin below stall
+        dCJe = aircraft.k_blow*delta_C_j;
+        c0 = .1856 + .0334*dF_TO + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+        c1 = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
         alpha_stall = min(16 + 1.5*T_c_prime, 22);
-    
-        delta_alpha = 10; % 10 degree stall marign from Courtin
-    
-        alpha_max = alpha_stall - delta_alpha;
-        CL_max = CL(find(alpha <= alpha_max, 1, "last"));
+        CL_LO = min(CL_max/aircraft.k_TO^2, c0 + c1*(alpha_stall - aircraft.alpha_margin));   % usable lift-off C_L
 
         V_stall_calc = sqrt(2*takeoff_weight/(rho*S*CL_max));
-
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
-
-      V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update, converges to the true stall speed
+        V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update
     end
 
     disp("Takeoff Configuration Blown Wing V_stall: " + V_stall_calc/1.688 + " kts")
     disp("Takeoff Configuration Blown Wing CL_max: " + CL_max)
 
     aircraft.CLmax_to = CL_max;
+    aircraft.CL_LO = CL_LO;
+    disp("Takeoff usable lift-off C_L: " + CL_LO)
     CL_max_flap_unblown = 1.3226;
     V_stall_flap_unblown = sqrt(2*takeoff_weight/(rho*S*CL_max_flap_unblown));
 
