@@ -11,7 +11,7 @@ function [CO2, NOx, parts] = emissions_objective(P, aircraft)
     parts.fuel  = m_fuel*(p.EI_CO2 + p.EI_WTT);
 
     % power grid
-    E_grid = aircraft.eb_star / p.eta_charge;
+    E_grid = aircraft.W_battery*lb * aircraft.eb_star/3.6e6 / p.eta_charge;   % kWh from the grid per flight (usable pack recharged)
     parts.grid  = E_grid*p.CI_grid;
 
     % battery manufacturing
