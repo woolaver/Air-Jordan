@@ -22,7 +22,7 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     alt_cr = aircraft.alt_cr; %ft converted to meters
     [~, a_cr, ~, rho_cr] = atmoscoesa(alt_cr/3.281);
     rho_cr = rho_cr/515.4; %slug/ft^3
-    rho_cr = 0.000891;
+   
     a_cr = a_cr*3.281; %ft/s
 
     [T_land, ~, ~, ~] = atmoscoesa(0);
@@ -136,20 +136,20 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     t_c_v_tail = .12;
     sweep_v_tail = deg2rad(40);
 
-    FF_wing = (1 + (.06/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_cr^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
+    FF_wing = (1 + (.6/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_cr^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
     FF_fus = (.9 + (5/f_fus^(1.5)) + (f_fus/400)); %equation from slide 13 of Cinar slides
-    FF_h_tail = 1.1*(1 + (.06/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_cr^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
-    FF_v_tail = 1.1*(1 + (.06/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_cr^(.18)*cos(sweep_v_tail)^(.28)); 
+    FF_h_tail = 1.1*(1 + (.6/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_cr^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
+    FF_v_tail = 1.1*(1 + (.6/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_cr^(.18)*cos(sweep_v_tail)^(.28)); 
 
-    FF_wing_land = (1 + (.06/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_land^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
+    FF_wing_land = (1 + (.6/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_land^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
     FF_fus_land = (.9 + (5/f_fus^(1.5)) + (f_fus/400)); %equation from slide 13 of Cinar slides
-    FF_h_tail_land = 1.1*(1 + (.06/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_land^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
-    FF_v_tail_land = 1.1*(1 + (.06/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_land^(.18)*cos(sweep_v_tail)^(.28)); 
+    FF_h_tail_land = 1.1*(1 + (.6/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_land^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
+    FF_v_tail_land = 1.1*(1 + (.6/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_land^(.18)*cos(sweep_v_tail)^(.28)); 
 
-    FF_wing_takeoff = (1 + (.06/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_land^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
+    FF_wing_takeoff = (1 + (.6/x_c_wing)*(t_c_wing) + 100*(t_c_wing)^4)*(1.34*M_land^(.18)*cos(sweep_wing)^(.28)); %equation from slide 13 of Cinar slides, x/c, t/c values from NLF-0115 airfoil
     FF_fus_takeoff = (.9 + (5/f_fus^(1.5)) + (f_fus/400)); %equation from slide 13 of Cinar slides
-    FF_h_tail_takeoff = 1.1*(1 + (.06/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_land^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
-    FF_v_tail_takeoff = 1.1*(1 + (.06/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_land^(.18)*cos(sweep_v_tail)^(.28)); 
+    FF_h_tail_takeoff = 1.1*(1 + (.6/x_c_h_tail)*(t_c_h_tail) + 100*(t_c_h_tail)^4)*(1.34*M_land^(.18)*cos(sweep_h_tail)^(.28)); %1.1* due to tail surface with hinged rudder/elevator having 10% higher form factor
+    FF_v_tail_takeoff = 1.1*(1 + (.6/x_c_v_tail)*(t_c_v_tail) + 100*(t_c_v_tail)^4)*(1.34*M_land^(.18)*cos(sweep_v_tail)^(.28)); 
 
     %Interference Factors
 
