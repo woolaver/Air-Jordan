@@ -64,7 +64,10 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     W5_W4 = 0.992;  % historical
 
     % IFR Reserve
-    W6_W5 = 0.992;
+    L_D_max = 1/(2*sqrt(CD0_clean*k_clean));                % best L/D for the hold
+    V_hold  = 120*1.688;                                    % holding speed [ft/s], about best endurance
+    R_alt   = 30*6076.1;                                    % 30 nmi alternate [ft]
+    W6_W5   = exp(-R_alt*c_ft/(eta*L_D)) * exp(-45*60*V_hold*c_ft/(eta*L_D_max));   % alternate + 45 min hold, 14 CFR 135.223
 
     % landing
     W7_W6 = 0.992;
