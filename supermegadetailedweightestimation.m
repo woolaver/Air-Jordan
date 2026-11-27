@@ -57,8 +57,9 @@ function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
         work_TO_J     = aircraft.max_power*60*1.35582;        % about 1 min at full power for take-off [J]
         work_em_J     = (W_ec*25*6076.1/L_D)*1.35582;         % 25 nmi emergency alternate on battery [J]
         work_J        = work_cruise_J + work_climb_J + work_TO_J + work_em_J;                                % J
-        W_battery  = work_J/(aircraft.prop_efficiency*aircraft.electric_efficiency* ...
-                     e_battery*aircraft.battery_degredation)*2.20462;           % lb
+        eta_e = aircraft.prop_efficiency*aircraft.electric_efficiency;
+        W_battery = ((work_cruise_J + work_climb_J + work_TO_J)/(eta_e*e_battery) ...       % 200 nmi mission with a NEW pack
+                   + work_em_J/(eta_e*e_battery*aircraft.battery_degredation))*2.20462;   % emergency reserve still there at end of life [lb]
         W_wing     = composite_wing_factor * 0.036*aircraft.wing_area^(0.758) * (aircraft.AR / cosd(aircraft.wing_sweep)^2)^0.6 * q_cruise ^0.006 * ...
                      aircraft.taperratio^0.04 *(100 * aircraft.wing_tc / cosd(aircraft.wing_sweep))^-0.3 * (Nz*W0)^0.49;
         W_horizontaltail = composite_stabilizer_factor * 0.016 * (Nz * W0)^0.414 * q_cruise^0.168 * aircraft.horiz_area^0.896 * (100 * aircraft.horiz_tc / ...
