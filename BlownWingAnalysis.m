@@ -12,7 +12,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     Ad = num_props*(pi*prop_diameter^2)/4;
     
     disk_area_ratio = Ad/S;
-    fB = aircraft.fB; %following Courtin's assumption, most likely we can actually get this higher as the width of our fuselage will be very small compared to big ass wings
+        fB = 0.9*min(num_props*prop_diameter/sqrt(AR*S), 1);   % blown span share n*D/b, x0.9 for slipstream contraction
     
     %% Thrust and slipstream speed from shaft power
     
