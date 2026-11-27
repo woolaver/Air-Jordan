@@ -414,18 +414,16 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     K_f = .38;
     Cm_alpha_fus = K_f*(aircraft.fuselage_width^2*aircraft.fuselage_length)/(S*c_bar);
 
+    dF  = delta_F;                    % landing flap (64 deg)
+    CLf = aircraft.CLmax_flap_LD;     % 2.60
     while V > 0
-        [delta_C_j, delta_j, T_c_prime] = calc_Tc(V(i), eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+        [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
         if (approach == 1)
-            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
-            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
-            F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-            F_0 = CL_u;
-            
-            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
-          
+            dCJe   = aircraft.k_blow*delta_C_j;
+            c0     = .1856 + .0334*dF + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+            c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
+            CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
+            CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
             CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
     
             L = .5*rho*V(i)^2*S*CL; %lbs
@@ -452,15 +450,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         end
 
         if(flare == 1)
-            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
-            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
-            F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-            F_0 = CL_u;
-            
-            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
-          
+            dCJe   = aircraft.k_blow*delta_C_j;
+            c0     = .1856 + .0334*dF + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+            c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
+            CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
+            CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
             CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
 
             alpha_stall = min(16 + 1.5*T_c_prime, 22); %deg
@@ -657,21 +651,20 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     %explicit euler method to time march
     %assuming no mass loss during takeoff, fuel loss is pretty negligible
     %anyway
+    dF  = aircraft.delta_F_to;        % take-off flap (40 deg)
+    CLf = aircraft.CLmax_flap_TO;     % 2.28
     while h < 50
         %assuming full throttle constantly, assuming constant rho, changes in
         %density are negligble from 0 - 50 ft
-        [delta_C_j, delta_j, T_c_prime] = calc_Tc(V(i), eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+        [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, P_sh, Ad, disk_area_ratio, delta_F, eta_F);
     
         if(climb == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
-            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
-            F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-            F_0 = CL_u;
-            
-            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
+            dCJe   = aircraft.k_blow*delta_C_j;
+            c0     = .1856 + .0334*dF + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+            c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
+            CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
+            CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
           
             CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
     
@@ -693,15 +686,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
         if(rotate == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
-            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
-            F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-            F_0 = CL_u;
-            
-            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
-
+            dCJe   = aircraft.k_blow*delta_C_j;
+            c0     = .1856 + .0334*dF + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+            c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
+            CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
+            CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
             CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
 
             L = .5*rho*V(i)^2*S*CL; %lbs
@@ -746,15 +735,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
         if (roll == 1)
             %estimate CL
-            CL_u = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A0 = .1856 + .0334*delta_F + .0667*rad2deg(alpha(i));
-            A1 = .0121*delta_j - .0085*rad2deg(alpha(i)) + .0426;
-            A2 = .0140*delta_j + .0226*rad2deg(alpha(i)) + .1407;
-            F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
-            F_0 = CL_u;
-            
-            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
-
+            dCJe   = aircraft.k_blow*delta_C_j;
+            c0     = .1856 + .0334*dF + sqrt(dCJe)*(.0121*delta_j + .0426) + dCJe*(.0140*delta_j + .1407);
+            c1     = .0667 - .0085*sqrt(dCJe) + .0226*dCJe;
+            CL_loc = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj/V(i))^2 - 1)));
+            CL     = min(c0 + c1*rad2deg(alpha(i)), fB*CL_loc + (1 - fB)*CLf);
             L = .5*rho*V(i)^2*S*CL; %lbs
     
             %estimate CX
