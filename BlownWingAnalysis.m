@@ -291,11 +291,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
         diff = abs(V_stall_clean - V_stall_calc)/V_stall_clean;
 
-        if (V_stall_clean > V_stall_calc)
-            V_stall_clean = V_stall_clean - .1;
-        else
-            V_stall_clean = V_stall_clean + .1;
-        end
+               V_stall_clean = 0.5*(V_stall_clean + V_stall_calc);   % relaxed update: average of guess and result
     end
 
     disp("Clean Blown Wing V_stall: " + V_stall_calc/1.688 + " kts")
