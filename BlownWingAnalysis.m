@@ -175,6 +175,14 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     alpha_app = (CL_app - c0)/c1;   % wing angle that gives the approach C_L [deg]
     aircraft.CL_app = CL_app;
     aircraft.CLmax_land = CL_max;
+    V_d = aircraft.V_app_max*1.688;
+    [dCj_d, dj_d, Tc_d, Vj_d] = calc_Tc(V_d, eta_a, rho, aircraft.approach_power_frac*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
+    CLloc_d = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj_d/V_d)^2 - 1)));
+    CLmax_d = fB*CLloc_d + (1 - fB)*CLf;
+    dCJe_d  = aircraft.k_blow*dCj_d;
+    c0_d = .1856 + .0334*delta_F + sqrt(dCJe_d)*(.0121*dj_d + .0426) + dCJe_d*(.0140*dj_d + .1407);
+    c1_d = .0667 - .0085*sqrt(dCJe_d) + .0226*dCJe_d;
+    aircraft.CL_app_size = min(CLmax_d/aircraft.k_app^2, c0_d + c1_d*(min(16 + 1.5*Tc_d, 22) - aircraft.alpha_margin));
     V_stall_land = V_stall_calc; %ft/s
 
     disp("Landing Configuration Blown Wing V_stall: " + V_stall_land/1.688 + " kts")
