@@ -103,7 +103,7 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 %Blown wing analysis properties
 aircraft.prop_diameter = 4.5; %ft, initial estimate from blown wing analysis
-aircraft.fB = .8; % initial estimate from Courtin, how much of the wing is actually being blown
+aircraft.fB = .9; % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.approach_power_frac = 0.22 %max power approach
 aircraft.CL_cap = 14 %upper limit blown C_L
