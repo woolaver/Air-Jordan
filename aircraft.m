@@ -150,7 +150,7 @@ aircraft.Wce_W0 = 0;
 aircraft.Wto_W0 = 0;
 
 aircraft.S_wet_fuselage = 517.96; %ft^2 from CAD as of 11/7
-aircraft.S_wet_horizontalStabilizer = 636.438; %ft^2 from CAD as of 11/7
+aircraft.S_wet_horizontalStabilizer = 2.05*aircraft.horiz_area;   % about 299 ft^2 for the 145.8 ft^2 tail (both sides + thickness)
 aircraft.S_wet_verticalStabilizer = 155.915; %ft^2 from CAD as of 11/7
 aircraft.wing_MAC = 9.0268; %from updated AR = 9
 aircraft.fuselage_length = 34.5625; %ft, from CAD drawings from PDR
