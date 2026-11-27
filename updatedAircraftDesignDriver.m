@@ -42,45 +42,9 @@ disp("Landing Distance: " + landing_distance + " ft")
 %% Updated Sizing Estimate
 
 [aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
+P_point = max(aircraft.P_W*aircraft.W0, aircraft.P_install);   % hp, start power for the loop
+aircraft.max_power = 550*P_point;                              % ft*lbf/s, used by BlownWingAnalysis and the battery
 
-
-%% Updated Weight Estimate and P-S Curves
-
-design_margin = 1.025;
-
-p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CLmax_to, ...
-    'prop_efficiency', aircraft.prop_efficiency,'Wcr_W0', aircraft.Wcr_W0,'Wclimb_W0', aircraft.Wclimb_W0, ...
-    'Wce_W0',aircraft.Wce_W0,'Wland_W0',aircraft.Wland_W0,'Pcr_P0',aircraft.Pcr_P0,'Neng',aircraft.num_propeller,'alt_cr',aircraft.alt_cr, 'design_margin', aircraft.design_margin);
-
-S_sweep = 200:10:1500;
-
-[P_point, S_point, aircraft] = PS_constraintcurves(S_sweep, aircraft.W0, aircraft);
-disp("P-S design power: " + P_point + " hp");
-disp("P-S design wing area: " + S_point + "ft^2");
-
-
-% Get Weights at Design Point
-[W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
-    aircraft.P_point, aircraft.W0, aircraft.S_point, W_S_point, aircraft.prop_efficiency, aircraft);
-
-% calculate emergency range
-em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
-
-
-disp('New Weight Values (lbs):')
-disp(WeightStruct);
-
-aircraft.battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
-aircraft.battery_volume = WeightStruct.W_batt/aircraft.battery_pack_density;
-
-disp('Battery Volume (ft^3): ')
-disp(aircraft.battery_volume)
-
-aircraft.fuel_density = 760/16.018;% 100% Sustainable Aviation Fuel, what the RR550 turbogenerator is designed to run on, 760 kg/m^3 converted to lbs/ft^3
-aircraft.fuel_volume = WeightStruct.Wf/aircraft.fuel_density;
-
-disp('Fuel Volume (ft^3): ')
-disp(aircraft.fuel_volume)
 
 %% Converged design loop: aerodynamics -> weights -> sizing -> field performance, repeated until W0 stops changing
 W0_old = 0;  it = 0;
@@ -125,6 +89,43 @@ fprintf('IOC = $%.2f\n', c.T3);
 fprintf('Aircraft Cost = $%.2f\n', c.T0);
 %}
 
+%% Updated Weight Estimate and P-S Curves
+
+design_margin = 1.025;
+
+p = struct('AR',aircraft.AR,'Cf_clean',aircraft.Cf_clean,'CLmax_to', aircraft.CLmax_to, ...
+    'prop_efficiency', aircraft.prop_efficiency,'Wcr_W0', aircraft.Wcr_W0,'Wclimb_W0', aircraft.Wclimb_W0, ...
+    'Wce_W0',aircraft.Wce_W0,'Wland_W0',aircraft.Wland_W0,'Pcr_P0',aircraft.Pcr_P0,'Neng',aircraft.num_propeller,'alt_cr',aircraft.alt_cr, 'design_margin', aircraft.design_margin);
+
+S_sweep = 200:10:1500;
+
+[P_point, S_point, aircraft] = PS_constraintcurves(S_sweep, aircraft.W0, aircraft);
+disp("P-S design power: " + P_point + " hp");
+disp("P-S design wing area: " + S_point + "ft^2");
+
+
+% Get Weights at Design Point
+[W0_design, WeightStruct] = weightIterationEstimate_corrected( ...
+    aircraft.P_point, aircraft.W0, aircraft.S_point, W_S_point, aircraft.prop_efficiency, aircraft);
+
+% calculate emergency range
+em = emergency_range(aircraft, W0_design, S_point, WeightStruct.W_batt, P_point);
+
+
+disp('New Weight Values (lbs):')
+disp(WeightStruct);
+
+aircraft.battery_pack_density = 1.5*62.428; %1.5 kg/L from baseline assumption converted to lbs/ft^3
+aircraft.battery_volume = WeightStruct.W_batt/aircraft.battery_pack_density;
+
+disp('Battery Volume (ft^3): ')
+disp(aircraft.battery_volume)
+
+aircraft.fuel_density = 760/16.018;% 100% Sustainable Aviation Fuel, what the RR550 turbogenerator is designed to run on, 760 kg/m^3 converted to lbs/ft^3
+aircraft.fuel_volume = WeightStruct.Wf/aircraft.fuel_density;
+
+disp('Fuel Volume (ft^3): ')
+disp(aircraft.fuel_volume)
 
 
 
