@@ -121,6 +121,10 @@ aircraft.k_TO          = 1.1;   % V_LOF >= 1.1 V_S
 aircraft.e_cr = .8; % Raymer eq. 12.48 for AR 9, straight wing with fuselage
 aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
 aircraft.e_takeoff = .78; %oswald efficiency with takeoff flaps from AVL
+aircraft.P_install = 2896;  % hp, 12 motors x 200 hp (C17 choice)
+aircraft.V_app_max = 30;    % kt, design approach speed for the landing wing loading (E5)
+aircraft.h_ups = 2.5;       % ft, fuselage underside above ground at the start of the upsweep -- from CAD
+aircraft.x_ups = 24.4;      % ft, x of the upsweep start (nose = 0) -- from CAD
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
 aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
@@ -202,5 +206,21 @@ aircraft.K_dep       = 0.10;     % [-]      residual value fraction
 aircraft.IR_a        = 0.02;     % [1/yr]   hull insurance rate 
 aircraft.f_financing = 0.07;     % [-]      financing as a fraction of DOC
 
-
+%% 16 deg upsweep set (overrides the values above)
+aircraft.u_upsweep = 16;
+aircraft.L_tc0     = 9.7;                                                        % ft, 19.9 deg tail cone (check in CAD)
+aircraft.dL_tc     = aircraft.L_tc0*(tand(19.9)/tand(aircraft.u_upsweep) - 1);   % +2.55 ft, same tail height
+aircraft.fuselage_length = 34.5625 + aircraft.dL_tc;
+aircraft.S_wet_fuselage  = 517.96 + pi*(aircraft.fuselage_width + aircraft.fuselage_height)/4*aircraft.dL_tc;  % +25 ft^2
+aircraft.l_tail = 27 + aircraft.dL_tc;
+aircraft.Lt     = 17.5 + aircraft.dL_tc;
+aircraft.horiz_area = 145.8*27/aircraft.l_tail;                                  % same tail volume, -9 %
+aircraft.vert_area  = 100*27/aircraft.l_tail;
+aircraft.Sh = aircraft.horiz_area;
+aircraft.S_wet_horizontalStabilizer = 2.05*aircraft.horiz_area;
+aircraft.dh_gear = 1.0;                                     % ft longer gear legs: strike angle back to 20.9 deg
+aircraft.h_ups = 2.5 + aircraft.dh_gear;
+aircraft.main_gear_length = 24 + 12*aircraft.dh_gear;       % in
+aircraft.nose_gear_length = 24 + 12*aircraft.dh_gear;       % in (aircraft stays level)
+aircraft.z_cg = aircraft.z_cg + aircraft.dh_gear;           % CG higher above the ground
 end
