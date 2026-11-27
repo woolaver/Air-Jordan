@@ -143,7 +143,7 @@ function [aircraft] = Blown_Lift_Sizing(aircraft, design_margin)
     G_crit = 0.01;
     ks_crit = 1.2;
     P_W_crit = climb(G_crit, aircraft.CLmax_land, ks_crit, aircraft.prop_efficiency, aircraft.Wclimb_W0, rho_400, rho_sl, L_D_to_gear);
-    P_W_crit_cor = (aircraft.num_propeller/(aircraft.num_propeller-3))*P_W_crit;
+    P_W_crit_cor = (aircraft.num_propeller/(aircraft.num_propeller-1))*P_W_crit;
 
     %balked landing configuration
     CLmax_land = 5.0;
@@ -167,12 +167,12 @@ function [aircraft] = Blown_Lift_Sizing(aircraft, design_margin)
     %Design point will be at intersection of landing and takeoff curve with
     %additional margin
 
-    W_S_land_point = W_S_land_cor(1);
-    
-    P_W_man_index = round(W_S_land_point*(1000/50));
-
-    W_S_point = W_S_land_point*(1-design_margin);
-    P_W_point = P_W_crit_cor(P_W_man_index)*(1 + design_margin);
+    W_S_point = W_S_land_cor(1)*(1 - design_margin);              % landing sets the wing loading
+    [~, k] = min(abs(W_S_sweep - W_S_point));                      % nearest grid point
+    pick = @(v) v(min(k, numel(v)));                              % works for scalar or vector constraints
+    P_W_env = max([pick(P_W_to), pick(P_W_to_clm), pick(P_W_crit_cor), ...
+                   pick(P_W_balked), pick(P_W_man_cor), pick(P_W_em)]);
+    P_W_point = P_W_env*(1 + design_margin);                       % highest power any constraint needs
 
     aircraft.W_S = W_S_point;
     aircraft.P_W = P_W_point;
@@ -260,7 +260,7 @@ function [aircraft] = Blown_Lift_Sizing(aircraft, design_margin)
     hold off;
 
     %Takeoff T/W correction factor
-    T_W_to_cor = (1/.8)*(1/.94)*aircraft.Wto_W0*(aircraft.num_propeller/(aircraft.num_propeller-3));
+    T_W_to_cor = (1/.8)*(1/.94)*aircraft.Wto_W0*(aircraft.num_propeller/(aircraft.num_propeller-1));
     disp("Takeoff Thrust Correction: " + T_W_to_cor)
     %{
     %stall, takeoff, and landing speeds
