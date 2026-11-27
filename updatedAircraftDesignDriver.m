@@ -82,27 +82,34 @@ aircraft.fuel_volume = WeightStruct.Wf/aircraft.fuel_density;
 disp('Fuel Volume (ft^3): ')
 disp(aircraft.fuel_volume)
 
-%% Aerodynamic Refinement
-[CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated, CD0_land_brake_updated] = aerodynamicRefinement(aircraft);
+%% Converged design loop: aerodynamics -> weights -> sizing -> field performance, repeated until W0 stops changing
+W0_old = 0;  it = 0;
+while abs(aircraft.W0 - W0_old) > 1 && it < 30
+    W0_old = aircraft.W0;  it = it + 1;
 
-aircraft.CD0_clean = CD0_clean_updated;
-aircraft.CD0_land = CD0_land_updated;
-aircraft.CD0_takeoff = CD0_takeoff_updated;
-aircraft.CD0_land_brake = CD0_land_brake_updated;
+    % aerodynamics with the current wing and weight
+    [CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated, CD0_land_brake_updated] = aerodynamicRefinement(aircraft);
+    aircraft.CD0_clean      = CD0_clean_updated;
+    aircraft.CD0_land       = CD0_land_updated;
+    aircraft.CD0_takeoff    = CD0_takeoff_updated;
+    aircraft.CD0_land_brake = CD0_land_brake_updated;
 
-disp("Updated CD0_clean: " + CD0_clean_updated)
-disp("Updated CD0_land: " + CD0_land_updated)
-disp("Updated CD0_takeoff: " + CD0_takeoff_updated)
-disp("Updated CD0_land_brake: " + CD0_land_brake_updated)
+    % weights at the current power (sets aircraft.W0 and aircraft.wing_area = W0/W_S)
+    [Wimproved, aircraft] = supermegadetailedweightestimation(aircraft.W0, P_point, aircraft);
 
-%% Improved weight estimation
+    % wing loading and power from the constraints, then take-off and landing
+    [aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
+    converged = 1;
+    [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft, converged);
+    [aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
 
-[Wimproved, aircraft] = supermegadetailedweightestimation(WeightStruct.W0, P_point, aircraft);
+    P_point = aircraft.P_W*aircraft.W0;   % power for the next pass
+    fprintf('Pass %d: W0 = %.0f lb, S = %.0f ft^2, P = %.0f hp, TO %.0f ft, LD %.0f ft\n', ...
+            it, aircraft.W0, aircraft.wing_area, P_point, takeoff_distance, landing_distance);
+end
+if it == 30, warning('Design loop did not converge in 30 passes'); end
 
-
-
-%% Emissions Objective Function
-
+%% Emissions Objective Function (once, on the converged design)
 [CO2, Nox, parts] = emissions_objective(P_point, aircraft);
 
 %% Cost Output based on Design Points
@@ -118,11 +125,6 @@ fprintf('IOC = $%.2f\n', c.T3);
 fprintf('Aircraft Cost = $%.2f\n', c.T0);
 %}
 
-[aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
-converged = 1;
 
-[takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(aircraft, converged);
-
-[aircraft] = Blown_Lift_Sizing(aircraft, aircraft.design_margin);
 
 
