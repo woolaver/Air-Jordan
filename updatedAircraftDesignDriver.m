@@ -83,7 +83,6 @@ disp('Fuel Volume (ft^3): ')
 disp(aircraft.fuel_volume)
 
 %% Aerodynamic Refinement
-134
 [CD0_clean_updated, CD0_land_updated, CD0_takeoff_updated, CD0_land_brake_updated] = aerodynamicRefinement(aircraft);
 
 aircraft.CD0_clean = CD0_clean_updated;
