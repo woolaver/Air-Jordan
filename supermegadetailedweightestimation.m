@@ -52,7 +52,11 @@ function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
         aircraft.fuel_density = 760/16.018; % fuel dens used in turbogenerators
         aircraft.fuel_volume = Wf/aircraft.fuel_density;
         W_ec       = W0*(1 - Wf_W0);
-        work_J     = (W_ec*R_ft/L_D)*1.35582;                                   % J
+                work_cruise_J = (W_ec*R_ft/L_D)*1.35582;              % 200 nmi cruise [J]
+        work_climb_J  = (W0*aircraft.alt_cr)*1.35582;         % potential energy to cruise altitude [J]
+        work_TO_J     = aircraft.max_power*60*1.35582;        % about 1 min at full power for take-off [J]
+        work_em_J     = (W_ec*25*6076.1/L_D)*1.35582;         % 25 nmi emergency alternate on battery [J]
+        work_J        = work_cruise_J + work_climb_J + work_TO_J + work_em_J;                                % J
         W_battery  = work_J/(aircraft.prop_efficiency*aircraft.electric_efficiency* ...
                      e_battery*aircraft.battery_degredation)*2.20462;           % lb
         W_wing     = composite_wing_factor * 0.036*aircraft.wing_area^(0.758) * (aircraft.AR / cosd(aircraft.wing_sweep)^2)^0.6 * q_cruise ^0.006 * ...
@@ -61,7 +65,7 @@ function [W, aircraft] = supermegadetailedweightestimation(Wguess, P, aircraft)
                             cosd(aircraft.wing_sweep))^-0.12 * (aircraft.horiz_AR / cosd(aircraft.horiz_sweep)^2)^0.043 * aircraft.horiz_taper ^-0.02;
         W_verticaltail = composite_stabilizer_factor * 0.073 * (1 + 0.2 *1) * (Nz * W0) ^0.376 * q_cruise^0.122 * aircraft.vert_area^0.873 * (100 * aircraft.vert_tc / ...
                            cosd(aircraft.vert_sweep))^-0.49 * (aircraft.vert_AR / cosd(aircraft.vert_sweep)^2)^0.357 * aircraft.vert_taper ^0.039;
-        W_fuselage    = composite_fuselage_factor * 0.052 * aircraft.S_fuselage^1.086 * (Nz * W0) ^0.177 * aircraft.Lt ^-0.051 * (aircraft.L_D) ^-0.072 * q_cruise^0.241 + W_press;
+        W_fuselage    = composite_fuselage_factor * 0.052 * aircraft.S_wet_fuselage^1.086 * (Nz * W0) ^0.177 * aircraft.Lt ^-0.051 * (aircraft.L_D) ^-0.072 * q_cruise^0.241 + W_press;
         %W_mainlanding_gear = 0.095*(Nl * Wl)^0.768 *(aircraft.main_gear_length /12 )^0.845;
         %W_noselanding_gear = 0.125 * (Nl * W1)^0.566 *  (aircraft.nose_gear_length / 12)^0.845;
 
