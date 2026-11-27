@@ -63,7 +63,9 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     Rec_v_tail_takeoff = (rho_takeoff*lc_v_tail*V_takeoff)/mu;
     
     %using Raymer's estimations for laminar and turbulent flow
-    lam_percent_wing = .5;
+    fB_wash  = 0.9*min(aircraft.num_propeller*aircraft.prop_diameter/sqrt(aircraft.AR*aircraft.wing_area), 1);   % blown span share
+    lam_wash = 0.2;                                          % laminar share inside the prop wash (cyclic transition, estimate)
+    lam_percent_wing = fB_wash*lam_wash + (1 - fB_wash)*0.5; % about 0.28 for fB 0.8
     lam_percent_fus = .25;
     lam_percent_h_tail = .5;
     lam_percent_v_tail = .5;
@@ -103,6 +105,10 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
     Cf_turb_v_tail_takeoff = .455/(log10(Rec_v_tail_takeoff)^(2.58) * (1 + .144*M_takeoff^2)^(.65));
     
     Cf_tot_wing = Cf_lam_wing*lam_percent_wing + Cf_turb_wing*(1-lam_percent_wing);
+    Ad_wash = aircraft.num_propeller*pi*aircraft.prop_diameter^2/4;
+    T_cr    = aircraft.Wcr_W0*aircraft.W0/aircraft.L_D;            % cruise thrust = drag [lbf]
+    Tc_cr   = T_cr/(0.5*rho_cr*V_cr^2*Ad_wash);                    % disk-loading thrust coefficient
+    Cf_tot_wing = Cf_tot_wing*(1 + fB_wash*Tc_cr/2);               % scrubbing on the blown wing, about +3 %
     Cf_tot_fus = Cf_lam_fus*lam_percent_fus + Cf_turb_fus*(1-lam_percent_fus);
     Cf_tot_h_tail = Cf_lam_h_tail*lam_percent_h_tail + Cf_turb_h_tail*(1-lam_percent_h_tail);
     Cf_tot_v_tail = Cf_lam_v_tail*lam_percent_v_tail + Cf_turb_v_tail*(1-lam_percent_v_tail);
