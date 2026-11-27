@@ -159,7 +159,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     while diff > tol
 
         [delta_C_j, delta_j, T_c_prime] = calc_Tc(1.3*V_stall_flaps, eta_a, rho, aircraft.approach_power_frac*P_sh, Ad, disk_area_ratio, delta_F, eta_F);  % approach speed 1.3 V_S, approach power
-    
+        alpha = linspace(-5, 20, 1000);
         CL_u = .1856 + .0334*delta_F + .0667.*alpha;
         
         A0 = .1856 + .0334*delta_F + .0667.*alpha;
