@@ -70,6 +70,7 @@ aircraft.weight_electric_motors = 30.2; % lbs, weight of electric motors
 % CAD System Results
 aircraft.S_fuselage = 931;
 aircraft.Lt = 17.5; % ft, dist from 1/4 MAC to horiz tail
+aircraft.u_upsweep = 19.9;   % deg; set 14 only once CAD has the 4.4 ft longer tail cone (and its extra wetted area)
 
 % Battery System Quantities
 aircraft.e_range = 200; %nmi, 200 required
