@@ -168,7 +168,8 @@ function [aircraft] = Blown_Lift_Sizing(aircraft, design_margin)
     %Design point will be at intersection of landing and takeoff curve with
     %additional margin
 
-    W_S_point = W_S_land_cor(1)*(1 - design_margin);              % landing sets the wing loading
+    S_min     = (aircraft.num_propeller*aircraft.prop_diameter/aircraft.f_span_max)^2/aircraft.AR;   % props must fit on the span
+    W_S_point = min(W_S_land_cor(1)*(1 - design_margin), aircraft.W0/S_min);
     [~, k] = min(abs(W_S_sweep - W_S_point));                      % nearest grid point
     pick = @(v) v(min(k, numel(v)));                              % works for scalar or vector constraints
     P_W_env = max([pick(P_W_to), pick(P_W_to_clm), pick(P_W_crit_cor), ...
