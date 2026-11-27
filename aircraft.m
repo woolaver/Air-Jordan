@@ -120,6 +120,7 @@ aircraft.k_app         = 1.3;   % V_app >= 1.3 V_S
 aircraft.k_TO          = 1.1;   % V_LOF >= 1.1 V_S
 aircraft.e_cr = .8; % Raymer eq. 12.48 for AR 9, straight wing with fuselage
 aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
+aircraft.e_takeoff = .78; %oswald efficiency with takeoff flaps from AVL
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
 aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
