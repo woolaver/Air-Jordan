@@ -23,7 +23,7 @@ aircraft.R_fuel = 200; %nmi, fuel range
 aircraft.V_cr = 225; %kts, from RFP
 aircraft.rho_takeoff = .002297; %slug/ft^3, ISA + 18F
 aircraft.rho_cr = .000738; %slug/ft^3, 35000 ft
-aircraft.n_engine = 2; % number of turbogenerators
+aircraft.n_engine = 1; % number of turbogenerators
 aircraft.n_fuel_tanks = 1;
 
 % Wing / Aerodynamic Qualities
@@ -133,7 +133,7 @@ aircraft.c_bar = 9.0268; %from AR of 9
 aircraft.x_mlg = 18.38; %ft, from CAD as of 11/7
 aircraft.x_cg = 16.5; %ft
 aircraft.x_acw = 11.72 + .25*aircraft.c_bar; %assuming ac is at quarter chord
-aircraft.Sh = 200; %Marley Estimation
+aircraft.Sh = aircraft.horiz_area;
 aircraft.l_tail = 27; %ft, from PDR
 aircraft.z_cg = 11.591207/2; %estimating half the distance from top of wing to bottom of landing gear
 aircraft.z_mlg = 0; %ft, on the ground
@@ -176,13 +176,13 @@ aircraft.R           = 400;      % [nmi]    design range, from RFP
 aircraft.then_year   = 2035;     % [yr]     entry into service
 
 % ----------- Logistics -------------
-aircraft.tb          = 3;        % [hr]     block time
+aircraft.tb          = 2.2;        % [hr]     block time
 aircraft.PLF         = 0.75;     % [-]      passenger load factor
 aircraft.R_p         = 1.0;      % [-]      ratio of pax legs (Roskam IOC term)
 aircraft.K_route     = 2.75;     % [-]      route factor (2.75 = regional)
 aircraft.ticket_price = 200;     % [$]      average one-way fare on the target route
 
-aircraft.P_f         = 2.24;     % [$/gal]  Jet-A price (then-year $)
+aircraft.P_f         = 3;        % [$/gal]  Jet-A price (then-year $)
 aircraft.rho_f       = 6.7;      % [lb/gal] Jet-A density
 aircraft.oil_frac    = 0.01;     % [-]      oil consumed as a fraction of block fuel
 aircraft.P_oil       = 46;       % [$/gal]  oil price based on current data
