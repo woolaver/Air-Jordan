@@ -396,6 +396,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     alpha = deg2rad(0); %rad
     gamma = init_glide_path;
     throttle = .15;
+    q_pitch = 0;   % pitch rate [rad/s]
 
     %logic for controlling phase of landing
     approach = 1; %1 = true, 0 = false
@@ -494,9 +495,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 Iyy_mlg = Iyy + m_land*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
     
                 q_dot = M_mlg/Iyy_mlg;
-                alpha(i+1) = alpha(i) + q_dot*dt;
+                q_pitch = q_pitch + q_dot*dt;          % integrate acceleration to rate
+                alpha(i+1) = alpha(i) + q_pitch*dt;    % integrate rate to angle
 
             else
+                q_pitch = 0;
                 alpha(i+1) = alpha(i); %keep alpha constant once it reaches target
             end
    
@@ -659,6 +662,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     CL_vec = 0;
     alpha = deg2rad(aircraft.wing_incidence); %deg
     gamma = deg2rad(0);
+    q_pitch = 0;
 
     V_stall = sqrt(2*W/(rho*S*CL_max));
     
@@ -729,9 +733,11 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 Iyy_mlg = Iyy + m*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
     
                 q_dot = M_mlg/Iyy_mlg;
-                alpha(i+1) = alpha(i) + q_dot*dt;
+                q_pitch = q_pitch + q_dot*dt;          % integrate acceleration to rate
+                alpha(i+1) = alpha(i) + q_pitch*dt;    % integrate rate to angle
     
             else
+                q_pitch = 0;
                 alpha(i+1) = alpha(i); %keep alpha constant once it reaches target
             end
     
