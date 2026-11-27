@@ -160,7 +160,7 @@ function [CD0_clean, CD0_land, CD0_takeoff, CD0_land_brake] = aerodynamicRefinem
 
     %Miscellaneous Form Drag
 
-    u_fus = deg2rad(19.9); %from CAD as of 11/7
+    u_fus = deg2rad(aircraft.u_upsweep);
     D_q_fus = 3.83*u_fus^(2.5)*A_fus_max;
 
     A_gear_struts = 30/8; %from CAD as of 11/7, supposed to be the aft facing area of the struts, don't know how to actually get this so just dividing by 4 for now
