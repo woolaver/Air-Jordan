@@ -82,7 +82,7 @@ aircraft.battery.soc_min     = 0.10;   % [-] min state of charge
 aircraft.battery.fade        = 0.90;   % [-] end-of-life capacity 
 aircraft.battery.p_spec_kWkg = 1.5;    % [kW/kg] pack-level discharge power 
 b = aircraft.battery;
-aircraft.eb_star = b.e_cell_Whkg * 3600 * b.pack_factor*(b.soc_max - b.soc_min);
+aircraft.eb_star = b.e_cell_Whkg * 3600 * 0.8;
 aircraft.battery_degredation = b.fade; %assuing battery replacement at 90% of battery max charge
 aircraft.DoD = b.soc_max - b.soc_min;
 
