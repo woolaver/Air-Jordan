@@ -170,7 +170,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         
         F_0 = CL_u;
         
-        CL = CL_u + F_Cj - F_0;
+        CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
 
         alpha_stall = min(16 + 1.5*T_c_prime, 22);
     
@@ -223,7 +223,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         
         F_0 = CL_u;
         
-        CL = CL_u + F_Cj - F_0;
+        CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
 
         alpha_stall = min(16 + 1.5*T_c_prime, 22);
     
@@ -278,7 +278,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
         
         F_0 = CL_u;
         
-        CL = CL_u + F_Cj - F_0;
+        CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
 
         alpha_stall = min(16 + 1.5*T_c_prime, 22);
     
@@ -435,7 +435,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
           
             CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
     
@@ -470,7 +470,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
           
             CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime;
 
@@ -527,7 +527,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            %CL = CL_u + F_Cj - F_0;
+            %CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
             CL = 0;
 
             L = .5*rho*V(i)^2*S*CL; %lbs
@@ -679,7 +679,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
           
             CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
     
@@ -708,7 +708,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
 
             CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime;
 
@@ -759,7 +759,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             F_Cj = A0 + A1*sqrt(delta_C_j) + A2*delta_C_j;
             F_0 = CL_u;
             
-            CL = CL_u + F_Cj - F_0;
+            CL = min(CL_u + fB*(F_Cj - F_0), aircraft.CL_cap);   % only the blown span gets the jet lift; cap at the flight-test level
 
             L = .5*rho*V(i)^2*S*CL; %lbs
     
