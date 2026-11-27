@@ -88,7 +88,7 @@ aircraft.DoD = b.soc_max - b.soc_min;
 aircraft.emergency_eb_star = 900*3600; %Wh/kg converted to SI units J/kg, nonrechargable emergency range
 aircraft.emergency_range = 225*.75; %45 minutes of range at 225 knots
 aircraft.divert_time = 45; % 45 minutes of diversion time
-aircraft.reserve_battery_weight = 847; % lbs
+aircraft.reserve_battery_weight = 0; % lbs
 
 
 % preliminary sizing
