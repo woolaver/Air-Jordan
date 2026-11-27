@@ -151,7 +151,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     V_stall_flaps = 50; %ft/s, initial estimate
 
-    tol = 1;
+    tol = 0.01;
     diff = 10;
 
     landing_weight = aircraft.Wland_W0 * aircraft.W0;
@@ -183,11 +183,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
 
-        if (V_stall_flaps > V_stall_calc)
-            V_stall_flaps = V_stall_flaps - .1;
-        else
-            V_stall_flaps = V_stall_flaps + .1;
-        end
+       V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update, converges to the true stall speed
     end
 
     V_stall_land = V_stall_calc; %ft/s
@@ -207,7 +203,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     V_stall_flaps = 50; %ft/s, initial estimate
 
-    tol = 1;
+    tol = 0.01;
     diff = 10;
 
     takeoff_weight = aircraft.Wto_W0 * aircraft.W0;
@@ -240,11 +236,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
         diff = abs(V_stall_flaps - V_stall_calc)/V_stall_flaps;
 
-        if (V_stall_flaps > V_stall_calc)
-            V_stall_flaps = V_stall_flaps - .1;
-        else
-            V_stall_flaps = V_stall_flaps + .1;
-        end
+      V_stall_flaps = 0.5*(V_stall_flaps + V_stall_calc);   % relaxed update, converges to the true stall speed
     end
 
     disp("Takeoff Configuration Blown Wing V_stall: " + V_stall_calc/1.688 + " kts")
@@ -261,7 +253,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     V_stall_clean = 80; %ft/s, initial estimate
 
-    tol = 1;
+    tol = 0.01;
     diff = 10;
 
     delta_F_clean = 0;
