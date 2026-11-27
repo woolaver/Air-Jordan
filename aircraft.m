@@ -103,17 +103,23 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 %Blown wing analysis properties
 aircraft.prop_diameter = 4.5; %ft, initial estimate from blown wing analysis
-aircraft.fB = .9; % initial estimate from Courtin, how much of the wing is actually being blown
+aircraft.fB = 0.9*min(num_props*prop_diameter/b, 1)); % initial estimate from Courtin, how much of the wing is actually being blown
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.approach_power_frac = 0.22 %max power approach
-aircraft.CL_cap = 14 %upper limit blown C_L
+aircraft.k_blow        = 1.1;    %blowing factor: 1.0 baseline el9 calibrated
+aircraft.CL_cap = 15; %upper limit blown C_L
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
-aircraft.delta_F = 60; %deg, flap deflection, assuming same for landing and takeoff for now
+aircraft.delta_F = 64; %deg, flap deflection, assuming same for landing and takeoff for now
 aircraft.landing_speed = 32.6; %kts, from blown wing landing analysis
 aircraft.eta_F = .81; %Estimate from Cinar slides
+aircraft.delta_F_to    = 40;    % deg, take-off flap
+aircraft.CLmax_flap_LD = 2.60;  % unblown C_Lmax, double-slotted Fowler 30 % chord, landing flap
+aircraft.CLmax_flap_TO = 2.28;  % same, take-off flap
+aircraft.alpha_margin  = 5;     % deg below stall in take-off, approach and flare
+aircraft.k_app         = 1.3;   % V_app >= 1.3 V_S
+aircraft.k_TO          = 1.1;   % V_LOF >= 1.1 V_S
 aircraft.e_cr = .8; % Raymer eq. 12.48 for AR 9, straight wing with fuselage
 aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
-aircraft.e_cr = .93; %oswald efficiency with clean wing from AVL
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
 aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
@@ -131,7 +137,6 @@ aircraft.Sh = 200; %Marley Estimation
 aircraft.l_tail = 27; %ft, from PDR
 aircraft.z_cg = 11.591207/2; %estimating half the distance from top of wing to bottom of landing gear
 aircraft.z_mlg = 0; %ft, on the ground
-aircraft.CL_max_stall = 8.4962; %from blown wing analysis 
 aircraft.wing_incidence = 2; %deg, from PDR slides
 
 % emergency range parameters
