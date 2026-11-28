@@ -87,7 +87,8 @@ aircraft.R_em = 25;       % nmi, alternate airport after the 200 nmi mission (TG
 aircraft.h_em = 5000;     % ft, missed approach, climb to 5,000 ft, divert, landing
 aircraft.t_app = 3/60;    % h, approach + landing at approach power (C17)
 aircraft.k_E = 0.905;     % battery energy calibration to the time-stepped mission simulation: 200 nmi + divert end at 10 % SOC (C17: 0.933)
-
+aircraft.k_F_trip = 1.11; % fuel calibration to the same simulation: trip fuel of the 400 nmi mission (C17 overall: 0.887)
+aircraft.k_F_res  = 1.22; % reserve fuel: go-around, 45 min hold at 5,000 ft, 30 nmi divert at low altitude
 aircraft.battery_degredation = b.fade; %assuing battery replacement at 90% of battery max charge
 aircraft.DoD = b.soc_max - b.soc_min;
 
@@ -112,7 +113,7 @@ aircraft.fB = 0.8;   % start value; recomputed from the prop layout in BlownWing
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.approach_power_frac = 0.2; %max power approach
 aircraft.k_blow        = 1.15;    %blowing factor: 1.0 baseline el9 calibrated
-aircraft.CL_cap = 15; %upper limit blown C_L
+aircraft.CL_cap = 16; %upper limit blown C_L
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
 aircraft.delta_F = 64; %deg, flap deflection, assuming same for landing and takeoff for now
 aircraft.landing_speed = 32.6; %kts, from blown wing landing analysis
@@ -126,9 +127,10 @@ aircraft.k_TO          = 1.1;   % V_LOF >= 1.1 V_S
 aircraft.e_cr = .8; % Raymer eq. 12.48 for AR 9, straight wing with fuselage
 aircraft.e_land = .78; %oswald efficiency with landing flaps from AVL
 aircraft.e_takeoff = .78; %oswald efficiency with takeoff flaps from AVL
-aircraft.P_install = 2896;  % hp, 12 motors x 200 hp (C17 choice)
+aircraft.P_install = 12*180/0.7457;   % hp, 12 motors x 180 kW = 2,897 hp (fixed)
 aircraft.V_app_max = 32;    % kt, design approach speed for the landing wing loading (E5)
 aircraft.f_span_max = 0.864;  % largest blown span share beside the fuselage, with prop gaps (C17)
+aircraft.props_fill_span = false; % true: prop diameter follows the span every pass (oscillates); false: fixed prop_diameter
 aircraft.sink_TD    = 6;      % ft/s touchdown sink rate (C17)
 aircraft.P_elec = 0.15;      % $/kWh electricity price (from aircraft_data_01.m)
 aircraft.h_ups = 2.5;       % ft, fuselage underside above ground at the start of the upsweep -- from CAD
@@ -150,7 +152,7 @@ aircraft.Sh = aircraft.horiz_area;
 aircraft.l_tail = 27; %ft, from PDR
 aircraft.z_cg = 11.591207/2; %estimating half the distance from top of wing to bottom of landing gear
 aircraft.z_mlg = 0; %ft, on the ground
-aircraft.wing_incidence = 2; %deg, from PDR slides
+aircraft.wing_incidence = 0; %deg, from PDR slides
 
 % emergency range parameters
 aircraft.h_field    = 0;         % [ft] field elevation (rho_takeoff is sea-level ISA+18F)
