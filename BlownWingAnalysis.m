@@ -419,14 +419,15 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
 
     dF  = delta_F;                    % landing flap (64 deg)
     CLf = aircraft.CLmax_flap_LD;     % 2.60
-    while V > 0
-        % start on the steady glide path for the approach power (no phugoid)
+    % start on the steady glide path for the approach power (no phugoid)
     [dCj0, dj0, Tc0, Vj0] = calc_Tc(V0, eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
     CL0 = W_land/(.5*rho*V0^2*S);
     CX0 = CD0_land + CL0^2/(pi*e_land*AR + 2*dCj0) - Tc0*(Vj0*cosd(dj0) - V0)/(Vj0 - V0);
     gamma = -atan(CX0/CL0);
     aircraft.gamma_app = rad2deg(gamma);
     disp(['Approach path angle: ' num2str(rad2deg(gamma)) ' deg at ' num2str(V0/1.688) ' kt'])
+    while V > 0
+  
         [delta_C_j, delta_j, T_c_prime, Vj] = calc_Tc(V(i), eta_a, rho, throttle*P_sh, Ad, disk_area_ratio, delta_F, eta_F);
         if (approach == 1)
             dCJe   = aircraft.k_blow*delta_C_j;
@@ -728,9 +729,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             th_new = min([th_old + qmax*dt, th_lim, rad2deg(alpha(i) + gamma(i+1)) - aircraft.wing_incidence]);
             th_new = max(th_new, th_old - qmax*dt);
             alpha(i+1) = max(deg2rad(th_new + aircraft.wing_incidence) - gamma(i+1), 0);
-            if h(i+1) < 10      % near the ground: body pitch alpha - i_w + gamma stays below the limit
-                alpha(i+1) = min(alpha(i+1), deg2rad(theta_max + aircraft.wing_incidence) - gamma(i+1));
-            end
+           
             CL_vec(i+1) = CL;
         end
     
