@@ -7,11 +7,11 @@ function [CO2, NOx, parts] = emissions_objective(P, aircraft)
     
     if ~isfinite(aircraft.W0), return, end
     % fuel burn
-    m_fuel = aircraft.Wf * lb;
+    m_fuel = aircraft.Wf_trip * lb;   % design-mission fuel; the IFR reserve is not burned
     parts.fuel  = m_fuel*(p.EI_CO2 + p.EI_WTT);
 
     % power grid
-    E_grid = aircraft.W_battery*lb * aircraft.eb_star/3.6e6 / p.eta_charge;   % kWh from the grid per flight (usable pack recharged)
+    E_grid = aircraft.E_mission_kWh / p.eta_charge;   % kWh from the grid: energy drawn on the mission, not the emergency reserve
     parts.grid  = E_grid*p.CI_grid;
 
     % battery manufacturing
