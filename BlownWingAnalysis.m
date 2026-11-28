@@ -511,6 +511,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 revThrottle = .5; %reverse thrust
                 flare = 0;
                 brake = 1;
+                alpha(i) = 0;
                 t_TD = t(i) + dt;   % touchdown time
                 alpha(i) = 0;
             end
@@ -547,7 +548,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             %no change in height during roll
             V(i+1) = V(i) + V_dot*dt;
             s(i+1) = s(i) + V(i+1)*dt;
-            alpha(i+1) = alpha(i);
+            alpha(i+1) = max(alpha(i) - deg2rad(aircraft.q_derot)*dt, deg2rad(aircraft.wing_incidence));   % nose down at q_derot until the nose gear touches
             gamma(i+1) = gamma(i);
             h(i+1) = h(i);
             CL_vec(i+1) = CL;
