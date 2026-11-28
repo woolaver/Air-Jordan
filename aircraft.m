@@ -82,7 +82,12 @@ aircraft.battery.soc_min     = 0.10;   % [-] min state of charge
 aircraft.battery.fade        = 0.90;   % [-] end-of-life capacity 
 aircraft.battery.p_spec_kWkg = 1.5;    % [kW/kg] pack-level discharge power 
 b = aircraft.battery;
-aircraft.eb_star = b.e_cell_Whkg * 3600 * 0.8;
+aircraft.eb_star = b.e_cell_Whkg * 3600 * 0.82;
+aircraft.R_em = 25;       % nmi, alternate airport after the 200 nmi mission (TG out)
+aircraft.h_em = 5000;     % ft, missed approach, climb to 5,000 ft, divert, landing
+aircraft.t_app = 3/60;    % h, approach + landing at approach power (C17)
+aircraft.k_E = 0.905;     % battery energy calibration to the time-stepped mission simulation: 200 nmi + divert end at 10 % SOC (C17: 0.933)
+
 aircraft.battery_degredation = b.fade; %assuing battery replacement at 90% of battery max charge
 aircraft.DoD = b.soc_max - b.soc_min;
 
@@ -102,7 +107,7 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 
 
 %Blown wing analysis properties
-aircraft.prop_diameter = 4.5; %ft, initial estimate from blown wing analysis
+aircraft.prop_diameter = 5.4; % ft, 12 props + 5 % gaps fill 86.4 % of a 75 ft span (C17); sets the smallest wing, 625 ft^2
 aircraft.fB = 0.8;   % start value; recomputed from the prop layout in BlownWingAnalysis
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
 aircraft.approach_power_frac = 0.2; %max power approach
@@ -125,6 +130,7 @@ aircraft.P_install = 2896;  % hp, 12 motors x 200 hp (C17 choice)
 aircraft.V_app_max = 32;    % kt, design approach speed for the landing wing loading (E5)
 aircraft.f_span_max = 0.864;  % largest blown span share beside the fuselage, with prop gaps (C17)
 aircraft.sink_TD    = 6;      % ft/s touchdown sink rate (C17)
+aircraft.P_elec = 0.15;      % $/kWh electricity price (from aircraft_data_01.m)
 aircraft.h_ups = 2.5;       % ft, fuselage underside above ground at the start of the upsweep -- from CAD
 aircraft.x_ups = 24.4;      % ft, x of the upsweep start (nose = 0) -- from CAD
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
@@ -225,4 +231,5 @@ aircraft.h_ups = 2.5 + aircraft.dh_gear;
 aircraft.main_gear_length = 24 + 12*aircraft.dh_gear;       % in
 aircraft.nose_gear_length = 24 + 12*aircraft.dh_gear;       % in (aircraft stays level)
 aircraft.z_cg = aircraft.z_cg + aircraft.dh_gear;           % CG higher above the ground
+aircraft.x_mlg = 18.38 + 0.7;                              % ft, main gear 0.7 ft aft: tip-back angle back above the tail-strike angle
 end
