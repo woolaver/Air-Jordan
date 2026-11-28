@@ -439,16 +439,14 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             L = .5*rho*V(i)^2*S*CL; %lbs
             X = .5*rho*V(i)^2*S*CX; %lbs
     
-            V_dot = (-X - W_land*sin(gamma(i)))/m_land;
-
-            V(i+1) = V(i) + V_dot*dt;
-    
-            gamma_dot = (L - W_land*cos(gamma(i)))/(m_land*V(i+1));
-    
-            gamma(i+1) = gamma(i) + gamma_dot*dt;
+            % stabilized approach: speed held at V0 = 1.3 V_S (never below it before the flare), steady glide path
+            V(i+1) = V(i);
+            CL = min(W_land*cos(gamma(i))/(.5*rho*V(i)^2*S), fB*CL_loc + (1 - fB)*CLf);   % lift = weight component
+            CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j) - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));
+            gamma(i+1) = -atan(CX/CL);                    % path angle where drag and weight component balance: no deceleration
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
-            alpha(i+1) = alpha(i); %hold angle of attack constant
+            alpha(i+1) = deg2rad(max((CL - c0)/c1, 0));   % wing angle for that C_L
             CL_vec(i+1) = CL;
 
 
@@ -502,6 +500,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
             gamma(i+1) = gamma(i) + gamma_dot*dt;
             gamma(i+1) = -asin(min(max(aircraft.sink_TD, sink_fl*h(i)/8)/V(i+1), 1));   % sink rate falls to 6 ft/s at touchdown
+            s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
             CL_vec(i+1) = CL;
 
@@ -664,14 +663,16 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     %anyway
     dF  = aircraft.delta_F_to;        % take-off flap (40 deg)
     CLf = aircraft.CLmax_flap_TO;     % 2.28
-    % tail-strike attitude: start of the upsweep and tail end (fuselage underside), both seen from the main gear
+        % tail-strike attitude: start of the upsweep and tail end (fuselage underside), both seen from the main gear
     x_end = aircraft.fuselage_length;
     h_end = aircraft.h_ups + (x_end - aircraft.x_ups)*tand(aircraft.u_upsweep);
     th_ts = min(atand(aircraft.h_ups/(aircraft.x_ups - x_mlg)), atand(h_end/(x_end - x_mlg)));   % deg
     theta_max = th_ts - 2;                                                 % 2 deg clearance
+    th_5ft = 14;  gam_max = 22;  qmax = 8;  n_max = 1.3;                   % deg, deg, deg/s, -: pitch below 5 ft, path angle, pitch rate, load factor
     aircraft.th_tailstrike = th_ts;
     aircraft.tipback = atand((x_mlg - aircraft.x_cg)/aircraft.z_cg);       % deg, must exceed the tail-strike angle (Raymer ch. 11)
-    disp(['Tail-strike attitude: ' num2str(th_ts) ' deg, pitch limit ' num2str(theta_max) ' deg, tip-back ' num2str(aircraft.tipback) ' deg'])
+    disp(['Tail-strike attitude: ' num2str(th_ts) ' deg, pitch limit ' num2str(theta_max) ' deg, tip-back ' num2str(aircraft.tipback) ' deg'])   
+        thr_vec = 1;   % throttle history (climb power reduction)
     while h < 50
         %assuming full throttle constantly, assuming constant rho, changes in
         %density are negligble from 0 - 50 ft
@@ -695,11 +696,38 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             V(i+1) = V(i) + V_dot*dt;
     
             gamma_dot = (L - W*cos(gamma(i)))/(m*V(i+1));
-    
+            % limits: load factor n <= 1.3, path angle <= 22 deg, pitch rate <= 8 deg/s (wing angle held)
+            gd_max = min([32.174*(n_max - cos(gamma(i)))/V(i), (deg2rad(gam_max) - gamma(i))/dt, deg2rad(qmax)]);
+            throttle_to = 1;
+            if gamma_dot > gd_max          % too much lift: hold the attitude and reduce power (as C17), alpha stays >= 0
+                CL_req = (m*V(i)*gd_max + W*cos(gamma(i)))/(.5*rho*V(i)^2*S);
+                lo = 0.05;  hi = 1;
+                for kk = 1:14              % bisection on the throttle
+                    throttle_to = 0.5*(lo + hi);
+                    [dCj_t, dj_t, Tc_t, Vj_t] = calc_Tc(V(i), eta_a, rho, throttle_to*P_sh, Ad, disk_area_ratio, dF, eta_F);
+                    dCJe_t = aircraft.k_blow*dCj_t;
+                    c0_t = .1856 + .0334*dF + sqrt(dCJe_t)*(.0121*dj_t + .0426) + dCJe_t*(.0140*dj_t + .1407);
+                    c1_t = .0667 - .0085*sqrt(dCJe_t) + .0226*dCJe_t;
+                    CLl_t = min(aircraft.CL_cap, CLf*(1 + aircraft.k_blow*((Vj_t/V(i))^2 - 1)));
+                    CL_t  = min(c0_t + c1_t*rad2deg(alpha(i)), fB*CLl_t + (1 - fB)*CLf);
+                    if CL_t > CL_req, hi = throttle_to; else, lo = throttle_to; end
+                end
+                CL = CL_t;  delta_C_j = dCj_t;  delta_j = dj_t;  T_c_prime = Tc_t;  Vj = Vj_t;
+                CX = CD0_takeoff + CL^2/(pi*e_takeoff*AR + 2*delta_C_j) - T_c_prime*(Vj*cosd(delta_j) - V(i))/(Vj - V(i));
+                L = .5*rho*V(i)^2*S*CL;  X = .5*rho*V(i)^2*S*CX;
+                V(i+1) = V(i) + (-X - W*sin(gamma(i)))/m*dt;
+                gamma_dot = min((L - W*cos(gamma(i)))/(m*V(i+1)), gd_max);
+            end
+            thr_vec(i+1) = throttle_to;
             gamma(i+1) = gamma(i) + gamma_dot*dt;
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
-            alpha(i+1) = alpha(i); %hold angle of attack constant
+            % wing angle: held; pitch limits near the ground (14 deg below 5 ft, tail strike below 10 ft); pitch rate +-8 deg/s; alpha >= 0
+            th_lim = 90;  if h(i+1) < 10, th_lim = theta_max; end;  if h(i+1) < 5, th_lim = min(th_lim, th_5ft); end
+            th_old = rad2deg(alpha(i) + gamma(i)) - aircraft.wing_incidence;
+            th_new = min([th_old + qmax*dt, th_lim, rad2deg(alpha(i) + gamma(i+1)) - aircraft.wing_incidence]);
+            th_new = max(th_new, th_old - qmax*dt);
+            alpha(i+1) = max(deg2rad(th_new + aircraft.wing_incidence) - gamma(i+1), 0);
             if h(i+1) < 10      % near the ground: body pitch alpha - i_w + gamma stays below the limit
                 alpha(i+1) = min(alpha(i+1), deg2rad(theta_max + aircraft.wing_incidence) - gamma(i+1));
             end
@@ -732,10 +760,10 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 Iyy_mlg = Iyy + m*((z_cg - z_mlg) + (x_mlg - x_cg))^2;
     
                 q_dot = M_mlg/Iyy_mlg;
-                q_pitch = q_pitch + q_dot*dt;          % integrate acceleration to rate
+                q_pitch = min(q_pitch + q_dot*dt, deg2rad(qmax));   % integrate acceleration to rate, at most 8 deg/s
                 alpha(i+1) = alpha(i) + q_pitch*dt;    % integrate rate to angle
-                if alpha(i+1) > deg2rad(theta_max + aircraft.wing_incidence)   % on the ground: body pitch = alpha - incidence
-                    alpha(i+1) = deg2rad(theta_max + aircraft.wing_incidence);  q_pitch = 0;
+                if alpha(i+1) > deg2rad(min(theta_max, th_5ft) + aircraft.wing_incidence)   % on the ground: body pitch = alpha - incidence <= 14 deg
+                    alpha(i+1) = deg2rad(min(theta_max, th_5ft) + aircraft.wing_incidence);  q_pitch = 0;
                     alpha_target = rad2deg(alpha(i+1));                         % rotation ends at the pitch limit
                 end
     
@@ -753,7 +781,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 CL_vec(i+1) = CL;
                 gamma(i+1) = gamma(i);
     
-                if (rad2deg(alpha(i+1)) >= alpha_target)
+                                if (rad2deg(alpha(i+1)) >= alpha_target) || (L >= W)   % lift-off as soon as the lift carries the weight
                     rotate = 0;
                     climb = 1;
                 end
@@ -807,6 +835,9 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 roll = 0;
                 rotate = 1;
                 alpha_target = alpha_stall - aircraft.alpha_margin; %deg
+            end
+            if (L >= W)                % blown lift carries the weight before rotation: lift off
+                roll = 0;  rotate = 0;  climb = 1;
             end
         end
         if i > 20000, warning('Take-off simulation stopped after 200 s'); break; end
