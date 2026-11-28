@@ -64,7 +64,7 @@ aircraft.num_propeller = 12; %from Data Sheet
 aircraft.prop_efficiency = .82; % from Data Sheet
 aircraft.prop_weight = 44.1; % lbs per propeller, chosen props
 aircraft.n_turbogenerators = 1; % number of chosen turbogenerators
-aircraft.weight_turbogenerators = 1010; % lbs, weight of chosen turbogenerator, 1MW honeywell
+aircraft.weight_turbogenerators = 900; % lbs, weight of chosen turbogenerator, 1MW honeywell
 aircraft.weight_electric_motors = 30.2; % lbs, weight of electric motors
 
 % CAD System Results
@@ -111,8 +111,8 @@ aircraft.Pcr_P0 = .8; %estimate from preliminary sizing
 aircraft.prop_diameter = 5.4; % ft, 12 props + 5 % gaps fill 86.4 % of a 75 ft span (C17); sets the smallest wing, 625 ft^2
 aircraft.fB = 0.8;   % start value; recomputed from the prop layout in BlownWingAnalysis
 aircraft.max_power = 550*2896; %slug*ft^2/s^3, from P-S plot 1765 hp
-aircraft.approach_power_frac = 0.2; %max power approach
-aircraft.k_blow        = 1.15;    %blowing factor: 1.0 baseline el9 calibrated
+aircraft.approach_power_frac = 0.18; %max power approach
+aircraft.k_blow        = 1.184;    %blowing factor: 1.0 baseline el9 calibrated
 aircraft.CL_cap = 16; %upper limit blown C_L
 aircraft.eta_a = .84; %rotor loss factor, not prop efficiency, from Cinar slides
 aircraft.delta_F = 64; %deg, flap deflection, assuming same for landing and takeoff for now
