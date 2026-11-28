@@ -3,7 +3,7 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     % Inputs: P [hp], W0 [lb], aircraft struct
     
     % constants from struct
-    c    = aircraft.specific_fuel_consumption_cruise;   % lb/(hp*h)
+    c    = aircraft.specific_fuel_consumption_cruise/ 0.93;   % lb/(hp*h)
     c_ft = c/(550*3600);                                 % 1/ft  (lb/(ft*lbf/s * s))
     eta  = aircraft.prop_efficiency;
     S    = aircraft.wing_area;
@@ -20,8 +20,8 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     k_climb   = 1/(pi*e_climb*aircraft.AR);
 
     % taxi (15 min at 5% power) and takeoff (1 min at full power)
-    W1_W0 = 1 - c*(15/60)*(0.05*P/W0);   W1 = W1_W0*W0;
-    W2_W1 = 1 - c*(1/60)*(P/W1);         W2 = W2_W1*W1;
+    W1_W0 = 1;   W1 = W0;    % taxi on battery: TG off (energy in supermegadetailedweightestimation)
+    W2_W1 = 1;   W2 = W1;    % take-off on battery
 
     % climb: energy method, clean config, ~160 kt climb, then accelerate to V_cr at h_cr
     n   = 100;
@@ -47,7 +47,7 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     xs  = 1 - D/T;  if xs < 0.1, xs = 0.1; climb_ok = false; end
     W   = W*exp(-c_ft*((V_cr^2 - V_y^2)/(2*g))/(eta*xs));
     if ~climb_ok, warning('Climb/acceleration power marginal at %.0f ft (D/T > 0.9)', h_cr); end
-    W3 = W;  W3_W2 = W3/W2;
+    W3_W2 = 1;  W3 = W2;     % climb: inside the calibrated range-extension energy; the loop above only checks the climb power (climb_ok)
 
     % fuel cruise segment (R_fuel at h_cr, V_cr)
     R_seg = aircraft.R_fuel*6076/200;
@@ -61,7 +61,7 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     W4 = W;  W4_W3 = W4/W3;
 
     % descent
-    W5_W4 = 0.992;  % historical
+    W5_W4 = 1;      % descent: glide, approach power from the battery
 
     % IFR Reserve
     L_D_max = 1/(2*sqrt(CD0_clean*k_clean));                % best L/D for the hold
@@ -70,14 +70,15 @@ function [Wf, Wf_W0, L_D, fuelfrac] = fuel_fraction_calc_refined(P, W0, aircraft
     W6_W5   = exp(-R_alt*c_ft/(eta*L_D)) * exp(-45*60*V_hold*c_ft/(eta*L_D_max));   % alternate + 45 min hold, 14 CFR 135.223
 
     % landing
-    W7_W6 = 0.992;
+    W7_W6 = 1;      % landing on battery
 
     % total
     W7_W0 = W7_W6*W6_W5*W5_W4*W4_W3*W3_W2*W2_W1*W1_W0;
     Wf_W0 = 1 - W7_W0;
     Wf    = Wf_W0*W0;
+    W_reserve = W5_W4*W4_W3*W3_W2*W2_W1*W1_W0*W0*(1 - W6_W5);   % lb, IFR reserve (alternate + 45 min): carried, not burned
 
     fuelfrac = struct('taxi',W1_W0,'takeoff',W2_W1,'climb',W3_W2,'cruise',W4_W3, ...
                       'descent',W5_W4,'loiter',W6_W5,'landing',W7_W6,'total',Wf_W0, ...
-                      'L_D_cruise',L_D,'CL_cruise',2*W4/(rho_cr*V_cr^2*S));
+                      'L_D_cruise',L_D,'CL_cruise',2*W4/(rho_cr*V_cr^2*S),'W_reserve',W_reserve);
 end
