@@ -48,8 +48,10 @@ aircraft.max_power = 550*P_point;                              % ft*lbf/s, used 
 
 %% Converged design loop: aerodynamics -> weights -> sizing -> field performance, repeated until W0 stops changing
 W0_old = 0;  it = 0;
+set(0, 'DefaultFigureVisible', 'off');   % no figure windows during the loop
 while abs(aircraft.W0 - W0_old) > 1 && it < 60
     W0_old = aircraft.W0;  it = it + 1;
+    close all   % keep only the figures of the latest pass
     % props, wing geometry and tails follow the wing. HT: all-moving T-tail at V_H = 1.05, the C17 trim requirement
     % (nose-down moment of the blown flap on the approach at aft CG, thrust above the CG at lift-off); VT: requirements below
     b_w = sqrt(aircraft.AR*aircraft.wing_area);  aircraft.wing_span = b_w;
@@ -94,6 +96,8 @@ while abs(aircraft.W0 - W0_old) > 1 && it < 60
     fprintf('Pass %d: W0 = %.0f lb, S = %.0f ft^2, P = %.0f hp, TO %.0f ft, LD %.0f ft\n', ...
             it, aircraft.W0, aircraft.wing_area, P_point, takeoff_distance, landing_distance);
 end
+set(0, 'DefaultFigureVisible', 'on');
+set(findall(0, 'Type', 'figure'), 'Visible', 'on');   % show the figures of the last (converged) pass
 if it == 60, warning('Design loop did not converge in 60 passes'); end
 
 %% Emissions Objective Function (once, on the converged design)
