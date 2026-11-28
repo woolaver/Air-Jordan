@@ -137,6 +137,8 @@ aircraft.h_ups = 2.5;       % ft, fuselage underside above ground at the start o
 aircraft.x_ups = 24.4;      % ft, x of the upsweep start (nose = 0) -- from CAD
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
 aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
+aircraft.t_free_roll = 0.5;  % s, free roll after touchdown before brakes and reverse thrust
+aircraft.a_brake_max = 0.9;  % g, highest deceleration on the ground roll (brakes + reverse thrust)
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
 aircraft.mu = .0165; %rolling resistance estimate, used for transport aircraft
