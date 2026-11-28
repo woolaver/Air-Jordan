@@ -57,15 +57,15 @@ function [c] = aircraftcost(aircraft)
         c.nav     = 0.5 * CEF89 * (1.852*aircraft.R/aircraft.tb) * sqrt((0.00045359237*aircraft.W0)/50);
          
         % airframe maintenance ($/block hr -> $/trip)
-        C_MLA     = 1.03 * (3 + 0.067*C_airframe/1000) * aircraft.R_L;
-        C_MMA     = 1.03 * (30*CEF89 + 0.79e-5 * C_airframe);
+        C_MLA     = 1.03 * (3 + 0.067*aircraft.W_airframe/1000) * aircraft.R_L;   % Metabook 3.23: airframe WEIGHT [lb], not price [$]
+        C_MMA     = 1.03 * (30*CEF89) + 0.79e-5 * C_airframe;               % Metabook 3.24 bracket
         c.maint_af = (C_MLA + C_MMA) * aircraft.tb;
          
         % engine maintenance ($/block hr per engine -> $/trip, all engines)
-        shp_each   = aircraft.SHP_to / max(aircraft.num_propeller, 1);
+        shp_each   = aircraft.P_TG_hp;                                       % the turbine is the turbogenerator, not the 12 electric motors
         C_MLE      = 1.03 * 1.3 * (0.4956 + 0.0532*(shp_each/1000)*(1100/aircraft.H_em) + 0.1) * aircraft.R_L;
         C_MME      = 1.03 * (30*CEF89 + 0.79e-5 * C_engine_each);   % placeholder form
-        c.maint_eng = aircraft.num_propeller * (C_MLE + C_MME) * aircraft.tb;
+        c.maint_eng = aircraft.n_turbogenerators * (C_MLE + C_MME) * aircraft.tb;
          
         COC = c.crew + c.fuel + c.oil + c.elec + c.airport + c.nav + ...
               c.maint_af + c.maint_eng;
