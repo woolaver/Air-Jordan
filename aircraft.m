@@ -138,6 +138,7 @@ aircraft.x_ups = 24.4;      % ft, x of the upsweep start (nose = 0) -- from CAD
 aircraft.e_g = .8; %oswald efficiency at ground, estimate from Courtin
 aircraft.mu_b = .5; %braking coefficient, estimate from Cinar slides
 aircraft.t_free_roll = 0.5;  % s, free roll after touchdown before brakes and reverse thrust
+aircraft.q_derot = 10;   % deg/s, nose-down rate after touchdown (fast, not instant)
 aircraft.a_brake_max = 0.9;  % g, highest deceleration on the ground roll (brakes + reverse thrust)
 aircraft.CD0_g = .5; %ground parasitic drag coefficient, from Courtin
 aircraft.G = .87; %not sure what this is, taken from Courtin
