@@ -23,7 +23,7 @@ function[P_point, S_point, aircraft] = PS_constraintcurves(S_sweep, W0, aircraft
     env.TOP = (-b + sqrt(b^2 + 4*a*env.sTOG))/(2*a);
     
     env.sland   = 300   ;
-    env.WS_land = (env.sland/80)*(env.rho/env.rho_sl)*aircraft.CLmax_land/aircraft.Wland_W0;
+    env.WS_land = 0.5*env.rho*(aircraft.V_app_max*1.688)^2*aircraft.CL_app_size/aircraft.Wland_W0;   % same landing rule as Blown_Lift_Sizing
     
     
     names = {'Takeoff', 'Cruise', 'Ceiling', 'Takeoff Climb', 'Critical Loss of Thrust', 'Balked Landing Climb', 'Maneuever', 'Emergency Range'};
@@ -127,6 +127,7 @@ disp("P-S design point: S = " + S_point + " ft^2, P = " + P_point + ...
         h(k) = plot(S_sweep, P(:,k), 'LineWidth', 1.5, 'DisplayName', names{k});
     end
     m = isfinite(S_landcurve);
+    if nnz(m) < 2, warning('No landing curve in the S sweep: no P-S plot'); return; end
     h(nC + 1) = plot(S_landcurve(m), P_grid(m), 'k', 'LineWidth', 1.5, ...
         'DisplayName', 'Landing');
 
