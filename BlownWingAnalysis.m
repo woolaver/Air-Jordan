@@ -506,12 +506,13 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             CL_vec(i+1) = CL;
 
             if(h(i+1) < 0)
+                alpha(i) = max(alpha(i) + gamma(i), deg2rad(aircraft.wing_incidence));   % on the ground the wing angle is the body pitch at touchdown
                 gamma(i) = 0;
                 throttle = 0; %used for CL calculation
                 revThrottle = .5; %reverse thrust
                 flare = 0;
                 brake = 1;
-                alpha(i) = 0;
+    
                 t_TD = t(i) + dt;   % touchdown time
                 alpha(i) = 0;
             end
