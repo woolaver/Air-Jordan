@@ -664,6 +664,14 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     %anyway
     dF  = aircraft.delta_F_to;        % take-off flap (40 deg)
     CLf = aircraft.CLmax_flap_TO;     % 2.28
+    % tail-strike attitude: start of the upsweep and tail end (fuselage underside), both seen from the main gear
+    x_end = aircraft.fuselage_length;
+    h_end = aircraft.h_ups + (x_end - aircraft.x_ups)*tand(aircraft.u_upsweep);
+    th_ts = min(atand(aircraft.h_ups/(aircraft.x_ups - x_mlg)), atand(h_end/(x_end - x_mlg)));   % deg
+    theta_max = th_ts - 2;                                                 % 2 deg clearance
+    aircraft.th_tailstrike = th_ts;
+    aircraft.tipback = atand((x_mlg - aircraft.x_cg)/aircraft.z_cg);       % deg, must exceed the tail-strike angle (Raymer ch. 11)
+    disp(['Tail-strike attitude: ' num2str(th_ts) ' deg, pitch limit ' num2str(theta_max) ' deg, tip-back ' num2str(aircraft.tipback) ' deg'])
     while h < 50
         %assuming full throttle constantly, assuming constant rho, changes in
         %density are negligble from 0 - 50 ft
@@ -692,6 +700,9 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
             s(i+1) = s(i) + V(i+1)*dt*cos(gamma(i+1));
             h(i+1) = h(i) + V(i+1)*dt*sin(gamma(i+1));
             alpha(i+1) = alpha(i); %hold angle of attack constant
+            if h(i+1) < 10      % near the ground: body pitch alpha - i_w + gamma stays below the limit
+                alpha(i+1) = min(alpha(i+1), deg2rad(theta_max + aircraft.wing_incidence) - gamma(i+1));
+            end
             CL_vec(i+1) = CL;
         end
     
@@ -723,6 +734,10 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 q_dot = M_mlg/Iyy_mlg;
                 q_pitch = q_pitch + q_dot*dt;          % integrate acceleration to rate
                 alpha(i+1) = alpha(i) + q_pitch*dt;    % integrate rate to angle
+                if alpha(i+1) > deg2rad(theta_max + aircraft.wing_incidence)   % on the ground: body pitch = alpha - incidence
+                    alpha(i+1) = deg2rad(theta_max + aircraft.wing_incidence);  q_pitch = 0;
+                    alpha_target = rad2deg(alpha(i+1));                         % rotation ends at the pitch limit
+                end
     
             else
                 q_pitch = 0;
