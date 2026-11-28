@@ -111,7 +111,7 @@ function [aircraft] = Blown_Lift_Sizing(aircraft, design_margin)
     sland = 300*SF_land;
     %assume sa term is zero for FAR 23 (land in 300ft)
     V_app_max = aircraft.V_app_max*1.688;                                               % ft/s, highest approach speed that still lands in 300 ft (C17: 27.5 kt)
-    W_S_land  = 0.5*aircraft.rho_takeoff*V_app_max^2*aircraft.CL_app;   % W/S at landing weight
+    W_S_land  = 0.5*aircraft.rho_takeoff*V_app_max^2*aircraft.CL_app_size;   % W/S at landing weight
     W_S_land_cor = W_S_land/aircraft.Wland_W0;
         
 
