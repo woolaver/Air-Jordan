@@ -533,10 +533,15 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
     
             %estimate CX
             CX = CD0_land_brake + CL^2/(pi*e_land*AR + 2*delta_C_j) + T_c_prime_rev;
-        
+            if t(i) < t_TD + aircraft.t_free_roll, CX = CD0_land + CL^2/(pi*e_land*AR + 2*delta_C_j); end   % free roll: no reverse thrust, no brake drag
             X = .5*rho*V(i)^2*S*CX; %lbs
         
-            V_dot = (-X - mu_brake*(W_land-L))/m_land;
+            if t(i) < t_TD + aircraft.t_free_roll
+                V_dot = (-X - aircraft.mu*(W_land-L))/m_land;     % free roll: rolling resistance only
+            else
+                V_dot = (-X - mu_brake*(W_land-L))/m_land;        % brakes + reverse thrust
+                V_dot = max(V_dot, -aircraft.a_brake_max*g);      % at most 1 g
+            end
         
             %no change in height during roll
             V(i+1) = V(i) + V_dot*dt;
