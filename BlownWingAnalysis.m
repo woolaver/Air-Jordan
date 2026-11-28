@@ -511,6 +511,7 @@ function [takeoff_distance, landing_distance, aircraft] = BlownWingAnalysis(airc
                 revThrottle = .5; %reverse thrust
                 flare = 0;
                 brake = 1;
+                t_TD = t(i) + dt;   % touchdown time
                 alpha(i) = 0;
             end
         end
